@@ -100,7 +100,7 @@
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-03-01 | Critical | — | Send body with all five required fields: `name`, `startDate`, `location`, `plan`, `company` | `201 Created`; `_id` present in response ✅ |
+| TC-03-01 | Critical | — | Send body with all required fields and verify each is accepted with the correct type: `name` (string), `startDate` (string, ISO 8601), `location` (string, ObjectId), `plan` (string, ObjectId), `company` (string, ObjectId) when `isPersonal=false`; or `member` (string, ObjectId) when `isPersonal=true` | `201 Created`; all sent fields reflected in the response ✅ |
 | TC-03-02 | Critical | — | Omit `name` | `400 Bad Request`; message: `"name must be a string"` ✅ |
 | TC-03-03 | Critical | — | Omit `startDate` | `400 Bad Request`; message: `"startDate must be a valid ISO 8601 date string"` ✅ |
 | TC-03-04 | Critical | — | Omit `location` | `400 Bad Request`; message: `"location must be a string"` ✅ |
@@ -115,14 +115,15 @@
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-04-01 | High | — | Send valid body without any optional fields | `201 Created`; server applies defaults: `isPersonal=false`, `type=month_to_month`, `intervalLength=month`, `intervalCount=1`, `isLocked=false`, `price=0` ✅ |
-| TC-04-02 | High | — | Include `"type": "fixed"` and a valid `endDate` after `startDate` | `201 Created`; `type=fixed`; `endDate` matches value sent ✅ |
-| TC-04-03 | High | — | Include `"type": "fixed"` without `endDate` | `400 Bad Request`; message: `"End date is required for fixed memberships"` ✅ |
-| TC-04-04 | Medium | — | Include `"intervalLength": "once"` | `201 Created`; `intervalLength=once` in response ✅ |
-| TC-04-05 | Medium | — | Include `"intervalLength": "hour"` | `201 Created`; `intervalLength=hour` in response |
-| TC-04-06 | Medium | — | Include `"intervalLength": "day"` | `201 Created`; `intervalLength=day` in response |
-| TC-04-07 | Medium | — | Include `"endDate"` set before `startDate` | `400 Bad Request` ⚠️ **BUG: returns `500` with `"Membership startDate should be before the endDate"`** |
-| TC-04-08 | Medium | — | Include `"properties": {"key1": "value1"}` | `201 Created`; `properties` in response equals `{"key1": "value1"}` ✅ |
+| TC-04-01 | High | — | Send valid body including all optional fields and verify each is accepted with the correct type: `isPersonal` (boolean), `type` (string: `month_to_month` or `fixed`), `endDate` (string, ISO 8601, required when `type=fixed`), `intervalLength` (string: `once`, `hour`, `day`, or `month`), `properties` (object) | `201 Created`; all sent optional fields reflected in the response ✅ |
+| TC-04-02 | High | — | Send valid body without any optional fields | `201 Created`; server applies defaults: `isPersonal=false` (boolean), `type=month_to_month` (string), `intervalLength=month` (string), `intervalCount=1` (number), `isLocked=false` (boolean), `price=0` (number) ✅ |
+| TC-04-03 | High | — | Include `"type": "fixed"` and a valid `endDate` after `startDate` | `201 Created`; `type=fixed`; `endDate` matches value sent ✅ |
+| TC-04-04 | High | — | Include `"type": "fixed"` without `endDate` | `400 Bad Request`; message: `"End date is required for fixed memberships"` ✅ |
+| TC-04-05 | Medium | — | Include `"intervalLength": "once"` | `201 Created`; `intervalLength=once` in response ✅ |
+| TC-04-06 | Medium | — | Include `"intervalLength": "hour"` | `201 Created`; `intervalLength=hour` in response |
+| TC-04-07 | Medium | — | Include `"intervalLength": "day"` | `201 Created`; `intervalLength=day` in response |
+| TC-04-08 | Medium | — | Include `"endDate"` set before `startDate` | `400 Bad Request` ⚠️ **BUG: returns `500` with `"Membership startDate should be before the endDate"`** |
+| TC-04-09 | Medium | — | Include `"properties": {"key1": "value1"}` | `201 Created`; `properties` in response equals `{"key1": "value1"}` ✅ |
 
 ---
 
@@ -149,11 +150,10 @@
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-06-01 | Critical | Valid request body | Send a valid POST; inspect all top-level keys in the `201` response | Response contains: `_id`, `name`, `isPersonal`, `status`, `calculatedStatus`, `type`, `location`, `plan`, `company`, `startDate`, `intervalLength`, `intervalCount`, `isLocked`, `price`, `discountAmount`, `calculatedDiscountAmount`, `createdAt`, `createdBy`, `modifiedAt`, `modifiedBy` ✅ |
-| TC-06-02 | Critical | Valid request body | Check field types in the `201` response | `_id` non-empty string; `name` string; `isPersonal` boolean; `isLocked` boolean; `price` number; `createdAt` and `modifiedAt` ISO 8601 strings ✅ |
-| TC-06-03 | High | Valid request body | Check `status` and `calculatedStatus` in the `201` response | `status` is `approved`; `calculatedStatus` is `active` for a membership with a past `startDate`; neither field is null or absent ✅ |
-| TC-06-04 | High | Valid request body | Check that `createdAt` and `modifiedAt` are equal and close to the request time | Both timestamps match and fall within a few seconds of the POST request time ✅ |
-| TC-06-05 | Medium | Valid request body | Inspect response headers | `Content-Type: application/json; charset=utf-8` ✅ |
+| TC-06-01 | Critical | Valid request body | Send a valid POST; verify every field in the `201` response is present with the correct type | `_id` (string, non-empty, server-generated); `name` (string); `isPersonal` (boolean); `status` (string: `approved` or `not_approved`); `calculatedStatus` (string: `not_started`, `active`, `expired`, or `not_approved`); `type` (string: `month_to_month` or `fixed`); `location` (string, ObjectId); `plan` (string, ObjectId); `company` (string, ObjectId — present when `isPersonal=false`); `startDate` (string, ISO 8601); `intervalLength` (string: `once`, `hour`, `day`, or `month`); `intervalCount` (number); `isLocked` (boolean); `price` (number); `discountAmount` (number); `calculatedDiscountAmount` (number); `createdAt` (string, ISO 8601); `createdBy` (string, ObjectId); `modifiedAt` (string, ISO 8601); `modifiedBy` (string, ObjectId) ✅ |
+| TC-06-02 | High | Valid request body | Check `status` and `calculatedStatus` enum values in the `201` response | `status` is `approved` by default; `calculatedStatus` is `active` for a membership with a current `startDate`; neither field is null or absent ✅ |
+| TC-06-03 | High | Valid request body | Check that `createdAt` and `modifiedAt` are equal and close to the request time | Both timestamps match each other and fall within a few seconds of the POST request time ✅ |
+| TC-06-04 | Medium | Valid request body | Inspect response headers | `Content-Type: application/json; charset=utf-8` ✅ |
 
 ---
 
