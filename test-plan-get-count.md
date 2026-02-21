@@ -69,10 +69,11 @@
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-03-01 | Critical | Org with ≥1 membership | Send valid request; inspect response body | Body contains exactly one field: `total` (number, non-negative integer); no other fields present ✅ |
-| TC-03-02 | High | Org with a known number of memberships | Compare `total` in count response against `rangeEnd` from `GET /memberships` with no `$limit` | Values are equal ✅ *(both returned `30` for the test org)* |
-| TC-03-03 | High | Org with zero memberships | `GET /{orgSlug}/memberships/count` on an empty org | `200 OK`; `{"total": 0}` |
-| TC-03-04 | Medium | — | Inspect response headers from a valid request | `Content-Type: application/json; charset=utf-8`; rate-limit headers present: `x-ratelimit-limit-read-minute`, `x-ratelimit-remaining-read-minute`, `x-ratelimit-reset-read-minute`, `x-ratelimit-limit-read-day`, `x-ratelimit-remaining-read-day`, `x-ratelimit-reset-read-day` ✅ |
+| TC-03-01 | Critical | Org with ≥1 membership | Send valid request; inspect top-level response fields and types | `200 OK`; body contains `total` (number, required, non-negative integer); body may contain `groups` (array of objects, each with `key` (string, required) and `count` (number, required)); no other fields present ✅ *(`groups` absent when no grouping parameter is in effect)* |
+| TC-03-02 | High | Org with ≥1 membership | Verify the `total` field value against `GET /memberships` with no `$limit` | `total` equals `rangeEnd` from the list response ✅ *(both returned `30` for the test org)* |
+| TC-03-03 | High | Org with zero memberships | `GET /{orgSlug}/memberships/count` on an empty org | `200 OK`; `total` is `0`; `groups` absent or empty array |
+| TC-03-04 | High | Org with memberships in multiple states | Send a request that triggers grouping; verify each object in `groups` | Each object in `groups` contains exactly: `key` (string, non-empty) and `count` (number, non-negative integer); sum of all `count` values equals `total` *(not executed — could not determine the parameter that triggers `groups`)* |
+| TC-03-05 | Medium | — | Inspect response headers from a valid request | `Content-Type: application/json; charset=utf-8`; rate-limit headers present: `x-ratelimit-limit-read-minute`, `x-ratelimit-remaining-read-minute`, `x-ratelimit-reset-read-minute`, `x-ratelimit-limit-read-day`, `x-ratelimit-remaining-read-day`, `x-ratelimit-reset-read-day` ✅ |
 
 ---
 
