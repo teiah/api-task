@@ -79,17 +79,19 @@
 
 ### TC-04 — Query Parameters
 
-> ⚠️ **Finding:** The count endpoint silently ignores **all** query parameters — including filter fields (`status`, `calculatedStatus`, `isPersonal`, `type`), pagination controls (`$limit`), field selection (`$select`), and unknown keys. Every request returns the same unfiltered `total` regardless of parameters passed. Test cases below document this behaviour.
+> **Finding — filters:** The [OfficeRnD query documentation](https://developer.officernd.com/docs/building-queries) defines basic equality filtering as `fieldName=value` (e.g. `?status=approved`). TC-04-02 through TC-04-05 use this correct format. The endpoint returns the same unfiltered `total` for every filter value, including contradictory combinations, which means the filters are silently ignored. This is a bug regardless of intent: if filtering is supported, the result should be filtered; if it is not supported, the endpoint should reject the parameter with `400` rather than silently accept it.
+>
+> **Finding — inapplicable params:** `$limit` and `$select` are pagination/projection controls that have no meaning on a count endpoint. Silently ignoring them is acceptable behaviour.
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-04-01 | High | — | `GET .../count?unknownParam=value` | `200 OK`; `{"total": <same unfiltered total>}` *(unknown param silently ignored — no `400` as seen on the GET list endpoint)* ⚠️ **BUG: query params are not validated; filters have no effect** |
-| TC-04-02 | High | Org with a mix of `approved` and `not_approved` memberships | `GET .../count?status=approved` | `200 OK`; expected filtered count of approved memberships ⚠️ **BUG: param silently ignored; returns full unfiltered total** |
-| TC-04-03 | High | Org with memberships in multiple calculated states | `GET .../count?calculatedStatus=active` | `200 OK`; expected count of active memberships ⚠️ **BUG: param silently ignored; returns full unfiltered total** |
-| TC-04-04 | High | Org with both personal and company memberships | `GET .../count?isPersonal=true` | `200 OK`; expected count of personal memberships ⚠️ **BUG: param silently ignored; returns full unfiltered total** |
-| TC-04-05 | High | Org with both `fixed` and `month_to_month` memberships | `GET .../count?type=fixed` | `200 OK`; expected count of fixed memberships ⚠️ **BUG: param silently ignored; returns full unfiltered total** |
-| TC-04-06 | Medium | — | `GET .../count?status=invalid_enum_value` | `400 Bad Request`; invalid enum value rejected ⚠️ **BUG: param silently ignored; returns `200` with full total** |
-| TC-04-07 | Medium | — | `GET .../count?$limit=1` | `400 Bad Request` or ignored with note; `$limit` is not applicable to a count endpoint | `200 OK`; `$limit` silently ignored; returns full total *(not a bug — `$limit` does not apply to count)* ✅ |
+| TC-04-01 | High | — | `GET .../count?unknownParam=value` | `400 Bad Request`; unrecognised parameter rejected ⚠️ **BUG: silently ignored; returns `200` with full unfiltered total — inconsistent with GET list which rejects unknown params** |
+| TC-04-02 | High | Org with a mix of `approved` and `not_approved` memberships | `GET .../count?status=approved` (valid equality filter per API query docs) | `200 OK`; `total` equals the count of `approved` memberships only ⚠️ **BUG: filter silently ignored; returns full unfiltered total regardless of value** |
+| TC-04-03 | High | Org with memberships in multiple calculated states | `GET .../count?calculatedStatus=active` (valid equality filter per API query docs) | `200 OK`; `total` equals the count of `active` memberships only ⚠️ **BUG: filter silently ignored; returns full unfiltered total regardless of value** |
+| TC-04-04 | High | Org with both personal and company memberships | `GET .../count?isPersonal=true` (valid equality filter per API query docs) | `200 OK`; `total` equals the count of personal memberships only ⚠️ **BUG: filter silently ignored; returns full unfiltered total regardless of value** |
+| TC-04-05 | High | Org with both `fixed` and `month_to_month` memberships | `GET .../count?type=fixed` (valid equality filter per API query docs) | `200 OK`; `total` equals the count of `fixed` memberships only ⚠️ **BUG: filter silently ignored; returns full unfiltered total regardless of value** |
+| TC-04-06 | Medium | — | `GET .../count?status=invalid_enum_value` | `400 Bad Request`; invalid enum value rejected ⚠️ **BUG: silently ignored; returns `200` with full total** |
+| TC-04-07 | Medium | — | `GET .../count?$limit=1` | `200 OK`; `$limit` silently ignored; full total returned *(acceptable — `$limit` is a pagination control and does not apply to a count endpoint)* ✅ |
 
 ---
 
