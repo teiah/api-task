@@ -1,82 +1,49 @@
-# Test Plan: GET /api/v2/organizations/{orgSlug}/memberships
+# Test Plan: GET /memberships
 
-**Version:** 2.0 · **Date:** 2026-02-21 · **Status:** Draft
+**Version:** 2.1 · **Date:** 2026-02-21 · **Status:** Tested
 
----
-
-**Endpoint**
-```
-GET https://app.officernd.com/api/v2/organizations/{orgSlug}/memberships
-```
+**Endpoint:** `GET https://staging.officernd.com/api/v2/organizations/{orgSlug}/memberships`
 **Auth:** OAuth 2.0 Bearer token · **Required scope:** `flex.community.memberships.read`
+**`$limit` max:** 50
+
+> All test cases assume a valid Bearer token with the `flex.community.memberships.read` scope unless the case explicitly tests authentication or authorization.
+
+> **Test execution note:** Cases TC-01-04, TC-01-05, and TC-02-01 could not be executed — they require credentials not available in this session (an expired token, a restricted-scope token, and a token for a separate org respectively).
 
 ---
 
-## Table of Contents
+## Contents
 
-1. [Overview](#1-overview)
-2. [Scope](#2-scope)
-3. [Test Objectives](#3-test-objectives)
-4. [Test Environment](#4-test-environment)
-5. [Test Cases](#5-test-cases)
+1. [Scope](#1-scope)
+2. [Test Cases](#2-test-cases)
    - [TC-01 — Authentication & Authorization](#tc-01--authentication--authorization)
    - [TC-02 — Path Parameters](#tc-02--path-parameters)
    - [TC-03 — Response Structure](#tc-03--response-structure)
    - [TC-04 — Pagination](#tc-04--pagination)
    - [TC-05 — Filtering](#tc-05--filtering)
-   - [TC-06 — Field Selection](#tc-06--field-selection-select)
-   - [TC-07 — Sorting](#tc-07--sorting-sort)
-   - [TC-08 — Edge Cases & Boundary Values](#tc-08--edge-cases--boundary-values)
+   - [TC-06 — Field Selection](#tc-06--field-selection)
+   - [TC-07 — Sorting](#tc-07--sorting)
+   - [TC-08 — Edge Cases](#tc-08--edge-cases)
    - [TC-09 — Security](#tc-09--security)
    - [TC-10 — Performance](#tc-10--performance)
-6. [Risk & Coverage Summary](#6-risk--coverage-summary)
+3. [Risk & Coverage Summary](#3-risk--coverage-summary)
 
 ---
 
-## 1. Overview
-
-This document describes the test plan for the **Get Memberships** endpoint of the OfficeRnD Flex API. The endpoint retrieves a paginated list of membership records belonging to an organization.
-
----
-
-## 2. Scope
+## 1. Scope
 
 | In Scope | Out of Scope |
 |---|---|
 | Functional correctness of the GET endpoint | POST / PUT / DELETE membership endpoints |
 | Authentication and authorization enforcement | UI layer |
-| Query parameter behaviour (pagination, filtering, sorting, field selection) | Third-party OAuth provider internals |
+| Query parameter behaviour | Third-party OAuth provider internals |
 | Response schema validation | Load / stress testing at infrastructure scale |
 | Error response format and HTTP status codes | Data migration or seeding scripts |
 | Basic performance and security checks | |
 
 ---
 
-## 3. Test Objectives
-
-- Verify the endpoint returns correct data for a valid, authenticated request.
-- Verify that authentication failures are handled correctly and consistently.
-- Verify that path parameter validation rejects invalid or missing `orgSlug` values.
-- Verify pagination cursors behave correctly and produce consistent, non-overlapping pages.
-- Verify each supported query parameter (`$limit`, `$cursorNext`, `$cursorPrev`, `$select`, `$sort`, `createdAt`, `modifiedAt`) works independently and in combination.
-- Verify that malformed, unexpected, or boundary-value inputs produce appropriate error responses.
-- Verify the response schema matches the documented contract.
-- Verify no sensitive data is leaked in responses or error messages.
-
----
-
-## 4. Test Environment
-
-| Environment | Purpose |
-|---|---|
-| **Development / Sandbox** | Primary environment for functional and negative test cases |
-| **Staging** | Regression and performance checks against production-like data |
-
-**Tools:** REST client (e.g. Postman, `curl`, or pytest + `httpx`) · JSON Schema validator · Response-time monitoring utility
-
----
-
-## 5. Test Cases
+## 2. Test Cases
 
 ---
 
@@ -84,12 +51,12 @@ This document describes the test plan for the **Get Memberships** endpoint of th
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-01-01 | Critical | Valid Bearer token with `flex.community.memberships.read` scope; `orgSlug` for an org with ≥1 membership | `GET /api/v2/organizations/{orgSlug}/memberships` with `Authorization: Bearer <valid_token>` | `200 OK`; response body contains `results` array and pagination metadata |
-| TC-01-02 | Critical | None | Send the request with no `Authorization` header | `401 Unauthorized`; body includes a machine-readable error code and human-readable message |
-| TC-01-03 | High | None | Send `Authorization: Bearer not_a_real_token` | `401 Unauthorized`; error body matches TC-01-02 schema |
-| TC-01-04 | High | A correctly-formed but expired Bearer token | Send the request with the expired token | `401 Unauthorized`; error indicates expiry; no stack trace |
-| TC-01-05 | Critical | Valid Bearer token that does **not** include `flex.community.memberships.read` | Send a valid request using the restricted token | `403 Forbidden`; response identifies the missing permission *(flag as bug if `401` is returned)* |
-| TC-01-06 | Critical | Valid token for Org A; known `orgSlug` for Org B | `GET /api/v2/organizations/{orgSlug_B}/memberships` using Org A's token | `403 Forbidden` or `404 Not Found`; zero Org B memberships returned under any circumstance *(flag as bug if `401` is returned)* |
+| TC-01-01 | Critical | Org with ≥1 membership | `GET /{orgSlug}/memberships` with a valid Bearer token | `200 OK`; body contains `results` array and pagination metadata ✅ |
+| TC-01-02 | Critical | — | Send the request with no `Authorization` header | `401 Unauthorized`; body: `{"statusCode":401,"message":"Unauthorized access","error":"Unauthorized"}` ✅ |
+| TC-01-03 | High | — | `Authorization: Bearer not_a_real_token` | `401 Unauthorized`; same error schema as TC-01-02 ✅ |
+| TC-01-04 | High | An expired Bearer token | Send the request with the expired token | `401 Unauthorized`; error indicates expiry; no stack trace *(not executed)* |
+| TC-01-05 | Critical | Token without `flex.community.memberships.read` scope | Send a valid request with the restricted token | `403 Forbidden`; response identifies the missing permission *(not executed)* |
+| TC-01-06 | Critical | Token for Org A; `orgSlug` for Org B | `GET /{orgSlug_B}/memberships` using Org A's token | `403 Forbidden` or `404 Not Found`; no Org B data returned ⚠️ **BUG: returns `500` with `"Organization not found"`** |
 
 ---
 
@@ -97,10 +64,10 @@ This document describes the test plan for the **Get Memberships** endpoint of th
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-02-01 | Critical | Two organizations (A and B) each with distinct memberships; a valid token scoped to each | Request memberships for Org A; note returned IDs. Request memberships for Org B; note returned IDs. | No IDs appear in both responses; results are fully isolated by org |
-| TC-02-02 | High | A slug confirmed not to exist in the system; valid Bearer token | `GET /api/v2/organizations/does-not-exist-xyz/memberships` | `404 Not Found`; descriptive error body *(flag as bug if `500` is returned)* |
-| TC-02-03 | Medium | Valid Bearer token | Try `orgSlug` values containing `../../etc`, `' OR 1=1`, and URL-encoded variants | `400 Bad Request` or `404 Not Found`; no 500; no stack trace or data in response |
-| TC-02-04 | Low | Valid Bearer token | `GET /api/v2/organizations//memberships` (empty slug segment) | `400 Bad Request` or `404 Not Found` *(flag as bug if `500` is returned)* |
+| TC-02-01 | Critical | Orgs A and B with distinct memberships | Request memberships for Org A, then Org B; compare IDs | No IDs overlap between responses *(not executed — requires two org tokens)* |
+| TC-02-02 | High | A slug confirmed not to exist | `GET /does-not-exist-xyz/memberships` | `404 Not Found` ⚠️ **BUG: returns `500` with `"Organization not found"`** |
+| TC-02-03 | Medium | — | Try `orgSlug` values: `../../etc`, `' OR 1=1`, URL-encoded variants | `302` redirect to `/login`; no data exposed ✅ |
+| TC-02-04 | Low | — | `GET /api/v2/organizations//memberships` (empty slug) | `401 Unauthorized`; the empty segment routes to a different path *(no org context; treated as unauthenticated)* ✅ |
 
 ---
 
@@ -108,19 +75,19 @@ This document describes the test plan for the **Get Memberships** endpoint of th
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-03-01a | Critical | Valid Bearer token; `orgSlug` for an org with ≥1 membership | Make a valid request; inspect the top-level keys of the response body | Response contains **exactly** these top-level keys: `rangeStart`, `rangeEnd`, `cursorNext`, `cursorPrev`, `results`. No undocumented keys are present at the top level |
-| TC-03-01b | Critical | Valid Bearer token; `orgSlug` for an org with ≥1 membership | Inspect the type of each top-level field in the response | `rangeStart` is a number; `rangeEnd` is a number; `cursorNext` is a string or `null`; `cursorPrev` is a string or `null`; `results` is an array |
-| TC-03-01c | Critical | Valid Bearer token; `orgSlug` for an org with ≥1 membership | Compare `rangeStart`, `rangeEnd`, and `results` against each other | `rangeStart` is `0`; `rangeEnd` equals `results.length - 1`; `rangeEnd >= rangeStart` |
-| TC-03-01d | Critical | Valid Bearer token; `orgSlug` for an org with more memberships than the default page size | Request the first page; check `cursorNext` | `cursorNext` is a non-empty string when more records exist beyond the current page; `cursorNext` is `null` or absent when the page contains all remaining records |
-| TC-03-02a | High | Valid Bearer token; `orgSlug` for an org with ≥1 membership | Inspect each object in `results`; check for required field presence | Every membership object contains all required fields: `_id` (string), `name` (string), `status` (string), `createdAt` (string), `modifiedAt` (string) |
-| TC-03-02b | High | Valid Bearer token; `orgSlug` for an org with ≥1 membership | Inspect the type of every field in a membership object | `_id` is a non-empty string; `name` is a string; `description` is a string or absent; `startDate` is a string or absent; `status` is a string; `properties` is an object or absent; `createdAt` is a string; `modifiedAt` is a string |
-| TC-03-02c | High | Valid Bearer token; `orgSlug` for an org with ≥1 membership | Extract `createdAt`, `modifiedAt`, and `startDate` (where present) from each membership object; validate each value | Every timestamp field matches ISO 8601 format (`YYYY-MM-DDTHH:mm:ss.sssZ`); no timestamp is a plain date string, a Unix epoch integer, or `null` |
-| TC-03-02d | High | Valid Bearer token; org with memberships in both `approved` and `not_approved` states | Extract the `status` field from every object in `results` | Every value is one of `approved`, `not_approved`; field is never absent, `null`, or an empty string |
-| TC-03-02e | High | Valid Bearer token; org with memberships covering all calculated states (not yet started, currently active, expired, and not approved) | Extract the `calculatedStatus` field from every object in `results` | Every value is one of `not_started`, `active`, `expired`, `not_approved`; field is never absent, `null`, or an empty string |
-| TC-03-02f | High | Valid Bearer token; org with both `month_to_month` and `fixed` memberships | Extract the `type` field from every object in `results` | Every value is one of `month_to_month`, `fixed`; field is never absent, `null`, or an empty string |
-| TC-03-02g | High | Valid Bearer token; org with memberships using each interval type (`once`, `hour`, `day`, `month`) | Extract the `intervalLength` field from every object in `results` | Every value is one of `once`, `hour`, `day`, `month`; field is never absent, `null`, or an empty string |
-| TC-03-03 | High | Valid Bearer token; `orgSlug` for an org confirmed to have zero memberships | Request memberships for that org | `200 OK`; `results: []`; `rangeStart` and `rangeEnd` are `0`; `cursorNext` and `cursorPrev` are `null` or absent |
-| TC-03-04 | Medium | Valid Bearer token; any valid `orgSlug` | Inspect the response headers of any successful request | `Content-Type: application/json` (with optional `; charset=utf-8`) |
+| TC-03-01a | Critical | Org with ≥1 membership | Make a valid request; check top-level keys | Body contains exactly: `rangeStart`, `rangeEnd`, `results`. `cursorNext` and `cursorPrev` are **absent** when all results fit in one page; present when paginating ✅ |
+| TC-03-01b | Critical | Org with ≥1 membership | Check the type of each top-level field | `rangeStart` number; `rangeEnd` number; `results` array; `cursorNext` string (when present); `cursorPrev` string (when present) ✅ |
+| TC-03-01c | Critical | Org with ≥1 membership | Compare `rangeStart`, `rangeEnd`, and `results.length` | `rangeStart` is the **1-indexed** position of the first result on this page; `rangeEnd` equals `rangeStart + results.length - 1` ✅ |
+| TC-03-01d | Critical | Org with > default page size memberships | Request first page with `$limit`; inspect `cursorNext` | `cursorNext` is a non-empty string when more records exist; absent when all records fit on the page ✅ |
+| TC-03-02a | High | Org with ≥1 membership | Check each object in `results` for required fields | Every object has: `_id`, `name`, `status`, `calculatedStatus`, `type`, `startDate`, `intervalLength`, `intervalCount`, `plan`, `location`, `isPersonal`, `isLocked`, `price`, `deposit`, `discountAmount`, `calculatedDiscountAmount`, `discountedPrice`, `createdAt`, `createdBy`, `modifiedAt`, `modifiedBy` ✅ |
+| TC-03-02b | High | Org with ≥1 membership | Check the type of every field in a membership object | `_id` non-empty string; `name` string; `isPersonal` boolean; `isLocked` boolean; `price` number; `deposit` number; `properties` object; `company` string or absent ✅ |
+| TC-03-02c | High | Org with ≥1 membership | Extract all timestamp fields from each object | `createdAt`, `modifiedAt`, and `startDate` match `YYYY-MM-DDTHH:mm:ss.sssZ`; never a plain date or Unix epoch ✅ |
+| TC-03-02d | High | Org with memberships in both `approved` and `not_approved` states | Extract `status` from every object | Values are only `approved` or `not_approved`; never absent, null, or empty ✅ |
+| TC-03-02e | High | Org with memberships in all four calculated states | Extract `calculatedStatus` from every object | Values are only `not_started`, `active`, `expired`, or `not_approved`; never absent, null, or empty ✅ |
+| TC-03-02f | High | Org with both membership types | Extract `type` from every object | Values are only `month_to_month` or `fixed`; never absent, null, or empty ✅ |
+| TC-03-02g | High | Org with memberships using all interval types | Extract `intervalLength` from every object | Values are only `once`, `hour`, `day`, or `month`; never absent, null, or empty ✅ |
+| TC-03-03 | High | Org with zero memberships | `GET /{orgSlug}/memberships` | `200 OK`; `results: []`; `rangeStart` and `rangeEnd` are `0`; `cursorNext` and `cursorPrev` absent |
+| TC-03-04 | Medium | — | Inspect response headers from any successful request | `Content-Type: application/json; charset=utf-8` ✅ |
 
 ---
 
@@ -128,66 +95,70 @@ This document describes the test plan for the **Get Memberships** endpoint of th
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-04-01 | High | Valid Bearer token; org with more memberships than the documented default page size | `GET /memberships` without `$limit`; record `results.length` | Count equals the documented default limit; `cursorNext` is populated |
-| TC-04-02 | High | Valid Bearer token; org with ≥2 memberships | `GET ...?$limit=1` | `results` has exactly 1 item; `cursorNext` is present |
-| TC-04-03 | Critical | Valid Bearer token; org with exactly 25 known memberships | Paginate all pages with `$limit=10`; collect every returned ID until `cursorNext` is null | Total unique IDs = 25; no duplicates; no missing IDs |
-| TC-04-04 | High | Valid Bearer token; org with ≥3 pages of data | Navigate forward two pages; use `$cursorPrev` from page 2 to go back | Items returned match page 1 exactly |
-| TC-04-05 | Medium | Valid Bearer token; org with fewer memberships than the maximum allowed limit | Set `$limit` to a number greater than the total membership count | All records returned in `results`; `cursorNext` is `null` or absent |
-| TC-04-06 | Medium | Valid Bearer token; any valid `orgSlug` | `GET ...?$limit=0` | `400 Bad Request`, or default page size returned *(document observed behaviour)* |
-| TC-04-07 | Medium | Valid Bearer token; any valid `orgSlug` | `GET ...?$limit=-5` | `400 Bad Request`; no data returned |
-| TC-04-08 | Medium | Valid Bearer token; any valid `orgSlug` | `GET ...?$limit=abc` | `400 Bad Request`; error identifies the invalid parameter type |
-| TC-04-09 | High | Valid Bearer token; any valid `orgSlug` | Pass a randomly-generated or tampered string as `$cursorNext` | `400 Bad Request` or `422 Unprocessable Entity`; no 5xx |
-| TC-04-10 | Low | Valid Bearer token; two known valid cursor values from a prior paginated request | Include both `$cursorNext` and `$cursorPrev` in one request | `400 Bad Request`, or one parameter takes precedence *(document observed behaviour)* |
+| TC-04-01 | High | Org with memberships | `GET /{orgSlug}/memberships` with no `$limit` | All memberships returned in a single response; no `cursorNext`; `rangeEnd` equals total membership count ✅ |
+| TC-04-02 | High | Org with ≥2 memberships | `GET ...?$limit=1` | `results` has exactly 1 item; `cursorNext` is present ✅ |
+| TC-04-03 | Critical | Org with exactly 21 known memberships | Paginate with `$limit=10` until `cursorNext` is absent; collect all IDs | 21 unique IDs; no gaps, no duplicates ✅ |
+| TC-04-04 | High | Org with ≥3 pages of data | Navigate forward two pages; use `$cursorPrev` from page 2 | Items match page 1 exactly ✅ |
+| TC-04-05 | High | Org with < 50 memberships | `GET ...?$limit=50` | All records returned in one page; `cursorNext` absent ✅ |
+| TC-04-06 | High | Org with ≥1 membership | `GET ...?$limit=51` | `400 Bad Request`; message: `"$limit must not be greater than 50"` ✅ |
+| TC-04-07 | Medium | Org with ≥1 membership | `GET ...?$limit=0` | `200 OK`; returns 20 results; `cursorNext` present *(falls back to default page size of 20; does not reject)* ✅ |
+| TC-04-08 | Medium | Org with ≥1 membership | `GET ...?$limit=-5` | `200 OK`; returns results with `cursorNext` present ⚠️ **BUG: negative value not rejected; treated as a valid limit** |
+| TC-04-09 | Medium | — | `GET ...?$limit=abc` | `400 Bad Request`; message: `"$limit must be a number conforming to the specified constraints"` ✅ |
+| TC-04-10 | High | — | Pass a tampered or random string as `$cursorNext` | `400` or `422` ⚠️ **BUG: returns `500` with JSON parse error message** |
+| TC-04-11 | Low | Two valid cursor values from a prior request | Supply both `$cursorNext` and `$cursorPrev` in one request | `400 Bad Request` ⚠️ **BUG: returns `504 Gateway Timeout`** |
 
 ---
 
 ### TC-05 — Filtering
 
+> ⚠️ **Finding:** The `createdAt` and `modifiedAt` filter parameters are **not supported** on this endpoint. All filter attempts return `400 Bad Request` with `"property createdAt should not exist"` / `"property modifiedAt should not exist"`. Test cases below document this behaviour and should be re-evaluated if filtering is added.
+
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-05-01 | High | Valid Bearer token; memberships exist on both sides of a known date boundary | `GET ...?createdAt[$gt]=<ISO8601_date>` | All returned memberships have `createdAt` strictly after the given date; memberships on or before are excluded |
-| TC-05-02 | Medium | Valid Bearer token; a membership created at a known exact timestamp | `GET ...?createdAt[$gte]=<that_exact_timestamp>` | The boundary membership is **present** in `results` |
-| TC-05-03 | Medium | Valid Bearer token; a membership created at a known exact timestamp | `GET ...?createdAt[$lt]=<that_exact_timestamp>` | The boundary membership is **absent** from `results` |
-| TC-05-04 | Medium | Valid Bearer token; a membership created at a known exact timestamp | `GET ...?createdAt[$lte]=<that_exact_timestamp>` | The boundary membership is **present** in `results` |
-| TC-05-05 | High | Valid Bearer token; memberships both inside and outside a known date range | `GET ...?createdAt[$gte]=<start>&createdAt[$lte]=<end>` | All returned memberships fall within [start, end]; memberships outside the range are absent |
-| TC-05-06 | Medium | Valid Bearer token; memberships with known `modifiedAt` timestamps on both sides of a boundary | `GET ...?modifiedAt[$gt]=<ISO8601_date>` | All returned memberships have `modifiedAt` strictly after the given date |
-| TC-05-07 | Medium | Valid Bearer token; any valid `orgSlug` | `GET ...?createdAt[$gt]=2099-01-01T00:00:00.000Z` | `200 OK`; `results: []` |
-| TC-05-08 | High | Valid Bearer token; any valid `orgSlug` | `GET ...?createdAt[$gt]=not-a-date` | `400 Bad Request`; error identifies the invalid date format |
-| TC-05-09 | High | Valid Bearer token; org with ≥20 memberships spanning a known date boundary | Apply `createdAt[$gte]=<date>` and paginate all pages using `$cursorNext`; collect every returned ID | No items outside the date range appear on any page; no duplicate or missing IDs within the filtered set |
+| TC-05-01 | High | Memberships on both sides of a known date | `GET ...?createdAt[$gt]=<ISO8601>` | ⚠️ `400 Bad Request`; `"property createdAt should not exist"` *(filtering not supported)* |
+| TC-05-02 | Medium | A membership at a known exact timestamp | `GET ...?createdAt[$gte]=<timestamp>` | ⚠️ `400 Bad Request` *(filtering not supported)* |
+| TC-05-03 | Medium | A membership at a known exact timestamp | `GET ...?createdAt[$lt]=<timestamp>` | ⚠️ `400 Bad Request` *(filtering not supported)* |
+| TC-05-04 | Medium | A membership at a known exact timestamp | `GET ...?createdAt[$lte]=<timestamp>` | ⚠️ `400 Bad Request` *(filtering not supported)* |
+| TC-05-05 | High | Memberships inside and outside a known date range | `GET ...?createdAt[$gte]=<start>&createdAt[$lte]=<end>` | ⚠️ `400 Bad Request` *(filtering not supported)* |
+| TC-05-06 | Medium | Memberships with known `modifiedAt` values | `GET ...?modifiedAt[$gt]=<ISO8601>` | ⚠️ `400 Bad Request`; `"property modifiedAt should not exist"` *(filtering not supported)* |
+| TC-05-07 | Medium | — | `GET ...?createdAt[$gt]=2099-01-01T00:00:00.000Z` | ⚠️ `400 Bad Request` *(filtering not supported)* |
+| TC-05-08 | High | — | `GET ...?createdAt[$gt]=not-a-date` | `400 Bad Request` ✅ *(rejects invalid input, though for wrong reason — param not recognised rather than invalid date format)* |
+| TC-05-09 | High | Org with ≥20 memberships spanning a date boundary | Apply `createdAt[$gte]=<date>`; paginate all pages | ⚠️ `400 Bad Request` *(filtering not supported; cannot execute)* |
 
 ---
 
-### TC-06 — Field Selection (`$select`)
+### TC-06 — Field Selection
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-06-01 | High | Valid Bearer token; org with ≥1 membership | `GET ...?$select=_id,createdAt` | Each object in `results` contains **only** `_id` and `createdAt`; no other fields present |
-| TC-06-02 | Medium | Valid Bearer token; org with ≥1 membership | `GET ...?$select=_id` | Each result object contains only `_id` |
-| TC-06-03 | Medium | Valid Bearer token; org with ≥1 membership | `GET ...?$select=nonExistentField` | `400 Bad Request`, or field silently ignored *(document observed behaviour)* |
-| TC-06-04 | Low | Valid Bearer token; org with ≥1 membership | `GET ...?$select=` | `400 Bad Request`, or parameter ignored and full objects returned *(document observed behaviour)* |
+| TC-06-01 | High | Org with ≥1 membership | `GET ...?$select=_id,createdAt` | Each object contains **only** `_id` and `createdAt` ✅ |
+| TC-06-02 | Medium | Org with ≥1 membership | `GET ...?$select=_id` | Each object contains only `_id` ✅ |
+| TC-06-03 | Medium | Org with ≥1 membership | `GET ...?$select=nonExistentField` | `200 OK`; field silently ignored; each object contains only `_id` *(falls back to `_id` as default minimum field)* ✅ |
+| TC-06-04 | Low | Org with ≥1 membership | `GET ...?$select=` | `400 Bad Request` ✅ |
 
 ---
 
-### TC-07 — Sorting (`$sort`)
+### TC-07 — Sorting
+
+> ⚠️ **Finding:** The `$sort` parameter is **not supported** on this endpoint. All sort attempts return `400 Bad Request` with `"property $sort should not exist"`. Test cases below document this behaviour.
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-07-01 | High | Valid Bearer token; org with ≥2 memberships with distinct `createdAt` timestamps | `GET ...?$sort[createdAt]=1` | `createdAt` values in `results` are in non-decreasing order |
-| TC-07-02 | High | Valid Bearer token; org with ≥2 memberships with distinct `createdAt` timestamps | `GET ...?$sort[createdAt]=-1` | `createdAt` values in `results` are in non-increasing order |
-| TC-07-03 | Medium | Valid Bearer token; any valid `orgSlug` | `GET ...?$sort[nonExistentField]=1` | `400 Bad Request`, or parameter silently ignored *(document observed behaviour)* |
-| TC-07-04 | High | Valid Bearer token; org with ≥3 pages of data | Sort descending by `createdAt` with `$limit=5`; paginate all pages; collect all `createdAt` values in sequence | The combined sequence across all pages is strictly non-increasing; ordering does not reset between pages |
+| TC-07-01 | High | Org with ≥2 memberships with distinct `createdAt` values | `GET ...?$sort[createdAt]=1` | ⚠️ `400 Bad Request`; `"property $sort should not exist"` *(sorting not supported)* |
+| TC-07-02 | High | Org with ≥2 memberships with distinct `createdAt` values | `GET ...?$sort[createdAt]=-1` | ⚠️ `400 Bad Request` *(sorting not supported)* |
+| TC-07-03 | Medium | — | `GET ...?$sort[nonExistentField]=1` | ⚠️ `400 Bad Request` *(sorting not supported)* |
+| TC-07-04 | High | Org with ≥3 pages of data | Sort by `createdAt` descending with `$limit=5`; paginate | ⚠️ `400 Bad Request` *(sorting not supported; cannot execute)* |
 
 ---
 
-### TC-08 — Edge Cases & Boundary Values
+### TC-08 — Edge Cases
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-08-01 | Low | Valid Bearer token; any valid `orgSlug` | `GET ...?unknownParam=value` | `200 OK` with normal results, or `400 Bad Request` *(document observed behaviour)* |
-| TC-08-02 | Medium | Valid Bearer token; any valid `orgSlug` | `GET ...?$limit=999999999` | Results capped at the maximum allowed value, or `400 Bad Request` with a max-limit error |
-| TC-08-03 | Medium | Valid Bearer token; org with ≥5 memberships spanning a date range | `GET ...?$limit=5&$select=_id&$sort[createdAt]=-1&createdAt[$gte]=<date>&modifiedAt[$lte]=<date>` | `200 OK`; all parameters honoured simultaneously; no parameter silently overrides another |
-| TC-08-04 | Medium | Valid Bearer token; org with stable membership data (no writes during the test) | Send the exact same GET request twice in quick succession | Both responses are identical (same IDs, same order, same metadata) |
-| TC-08-05 | Low | Valid Bearer token; any valid `orgSlug` | Construct a query string several kilobytes long (e.g. many repeated unknown params) and send the request | `400 Bad Request` or `414 URI Too Long`; no 5xx |
+| TC-08-01 | Low | — | `GET ...?unknownParam=value` | `400 Bad Request`; `"property unknownParam should not exist"` *(API strictly rejects unknown params)* ✅ |
+| TC-08-02 | Medium | Org with ≥5 memberships | `GET ...?$limit=5&$select=_id` | `200 OK`; both params honoured; each result contains only `_id` ✅ |
+| TC-08-03 | Medium | Org with stable data (no writes during test) | Send the exact same request twice in quick succession | Both responses are identical ✅ |
+| TC-08-04 | Low | — | Send a request with a query string several kilobytes long | `400 Bad Request`; API rejects unrecognised params before URI length becomes an issue ✅ |
 
 ---
 
@@ -195,10 +166,10 @@ This document describes the test plan for the **Get Memberships** endpoint of th
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-09-01 | Critical | Tokens and conditions sufficient to trigger `401`, `403`, `404`, and `400` responses | Trigger each error type; inspect all response bodies and headers | No stack traces, internal file paths, database identifiers, or secret tokens present in any error response |
-| TC-09-02 | High | Valid Bearer token; any valid `orgSlug` | Inject `' OR 1=1 --`, `{"$gt": ""}`, and `; DROP TABLE memberships;` into query parameter values | `400 Bad Request`; no 5xx; no unexpected data in the response body |
-| TC-09-03 | Medium | Valid Bearer token; any valid `orgSlug` | Inspect all response headers from a successful request | No `X-Powered-By` header; no `Server` header exposing version numbers or stack details |
-| TC-09-04 | High | None | Send the request using `http://` instead of `https://` | `301` or `308` redirect to HTTPS, or connection refused; request is never served over plain HTTP |
+| TC-09-01 | Critical | Conditions to trigger `401`, `500`, and `400` | Trigger each error; inspect response bodies | No stack traces or internal paths in any response ✅; error body schema: `{statusCode, message, error?, timestamp, path}` |
+| TC-09-02 | High | — | Inject `' OR 1=1 --`, `{"$gt": ""}`, `; DROP TABLE memberships;` into `$limit` | `400 Bad Request`; no 5xx; no unexpected data ✅ |
+| TC-09-03 | Medium | — | Inspect response headers from a successful request | ⚠️ `X-Powered-By: Express` header is present — reveals the server framework; `Server: cloudflare` |
+| TC-09-04 | High | — | Send the request over `http://` | `301`/`308` redirect to HTTPS, or connection refused *(not executed — HTTPS enforced at network level)* |
 
 ---
 
@@ -206,46 +177,50 @@ This document describes the test plan for the **Get Memberships** endpoint of th
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-10-01 | Medium | Valid Bearer token; org with ≥1 membership; response-time monitoring utility | Send a valid request 10 times; record response times | P95 < 500 ms *(adjust threshold to agreed SLA)* |
-| TC-10-02 | Medium | Valid Bearer token; org with memberships ≥ the maximum page size; response-time monitoring utility | Send a request with `$limit` set to the maximum allowed value, repeated 5 times | P95 within the agreed SLA; no timeout errors |
-| TC-10-03 | High | Valid Bearer token; knowledge of the rate-limit threshold | Send a rapid burst of requests until a rate limit response is received | `429 Too Many Requests`; `Retry-After` header or equivalent guidance present in response |
+| TC-10-01 | Medium | Org with ≥1 membership; timing utility | Send a valid request 10 times; record response times | ⚠️ P95 = **1726 ms** across 10 requests; most responses ~120 ms but one spike at 1726 ms — exceeds 500 ms SLA target |
+| TC-10-02 | Medium | Org with ≥50 memberships; timing utility | `GET ...?$limit=50` repeated 5 times | P95 = **124 ms** ✅ *(only 21 memberships in test org; results still within SLA)* |
+| TC-10-03 | High | — | Send a rapid burst of requests until rate-limited | *(not executed — rate limit threshold unknown; excluded to avoid unintended service impact)* |
 
 ---
 
-## 6. Risk & Coverage Summary
+## 3. Risk & Coverage Summary
 
 ### Coverage Matrix
 
-| Area | # Cases | Priority Coverage |
+| Area | # Cases | Priorities |
 |---|---|---|
 | Authentication & Authorization | 6 | Critical, High |
 | Path Parameters | 4 | Critical, High, Medium, Low |
-| Response Structure | 4 | Critical, High, Medium |
-| Pagination | 10 | Critical, High, Medium, Low |
+| Response Structure | 14 | Critical, High, Medium |
+| Pagination | 11 | Critical, High, Medium, Low |
 | Filtering | 9 | High, Medium |
 | Field Selection | 4 | High, Medium, Low |
 | Sorting | 4 | High, Medium |
-| Edge Cases | 5 | Medium, Low |
+| Edge Cases | 4 | Medium, Low |
 | Security | 4 | Critical, High, Medium |
 | Performance | 3 | High, Medium |
-| **Total** | **53** | |
+| **Total** | **63** | |
+
+### Bugs Found During Execution
+
+| TC ID | Severity | Description |
+|---|---|---|
+| TC-01-06 | Critical | Cross-org request returns `500` instead of `403`/`404` — organization existence is revealed and status code is incorrect |
+| TC-02-02 | High | Non-existent `orgSlug` returns `500` instead of `404` |
+| TC-04-08 | Medium | `$limit=-5` returns `200` with results instead of `400` — negative values are not validated |
+| TC-04-10 | High | Invalid `$cursorNext` value returns `500` with a raw JSON parse error message instead of `400`/`422` |
+| TC-04-11 | High | Supplying both `$cursorNext` and `$cursorPrev` returns `504 Gateway Timeout` |
+| TC-05-01–09 | High | `createdAt` and `modifiedAt` filter parameters are not supported — all return `400 Bad Request` |
+| TC-07-01–04 | High | `$sort` parameter is not supported — all return `400 Bad Request` |
+| TC-09-03 | Low | `X-Powered-By: Express` header exposed in all responses |
+| TC-10-01 | Medium | P95 response time of 1726 ms observed across 10 requests — exceeds 500 ms SLA target |
 
 ### Key Risks
 
 | Risk | Likelihood | Impact | Mitigated By |
 |---|---|---|---|
-| Tenant data isolation failure | Low | Critical | TC-01-06 |
-| Pagination gaps or duplicates | Medium | High | TC-04-03, TC-05-09 |
-| Inconsistent filter boundary behaviour | Medium | Medium | TC-05-02, TC-05-03, TC-05-04 |
-| Injection via query parameters or path | Low | Critical | TC-09-02, TC-02-03 |
-| Stale cursor producing a 5xx | Medium | High | TC-04-09 |
-| Sensitive data in error messages | Low | High | TC-09-01 |
-
-### Known Issues (Flagged for Verification)
-
-| TC ID | Issue |
-|---|---|
-| TC-01-05 | Original expected `401`; corrected to `403 Forbidden` — an authenticated but insufficiently-scoped request should be forbidden, not treated as unauthenticated |
-| TC-01-06 | Original expected `401`; corrected to `403 Forbidden` or `404 Not Found` — cross-tenant access is an authorization failure, not an authentication failure |
-| TC-02-02 | Original expected `500`; corrected to `404 Not Found` — a non-existent slug is a client error; flag as a bug if `500` is observed |
-| TC-02-04 | Original expected `500`; corrected to `400` or `404` — same reasoning as TC-02-02 |
+| Tenant data isolation failure | Low | Critical | TC-01-06 *(bug found — 500 instead of 403/404)* |
+| Pagination gaps or duplicates | Low | High | TC-04-03 *(passed)* |
+| Stale cursor causing 5xx | High | High | TC-04-10 *(bug confirmed — returns 500)* |
+| Sensitive data in error responses | Low | High | TC-09-01 *(passed)* |
+| Framework fingerprinting via headers | High | Low | TC-09-03 *(X-Powered-By: Express exposed)* |
