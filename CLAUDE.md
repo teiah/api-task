@@ -8,7 +8,7 @@ Every test plan document in this project must:
 - Cover all six endpoints (see below)
 - Follow the table-based style established in `test-plan-get-memberships-v2.md`
 - Assign a **Priority** (Critical / High / Medium / Low) to every test case
-- Include a **Risk & Coverage Summary** section at the end
+- Include a **Bugs Found** section at the end (omit if no bugs were observed)
 - Never send live requests to the API — all cases are design-only
 
 ---

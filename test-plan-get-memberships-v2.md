@@ -26,7 +26,7 @@
    - [TC-08 — Edge Cases](#tc-08--edge-cases)
    - [TC-09 — Security](#tc-09--security)
    - [TC-10 — Performance](#tc-10--performance)
-3. [Risk & Coverage Summary](#3-risk--coverage-summary)
+3. [Bugs Found](#bugs-found)
 
 ---
 
@@ -183,25 +183,7 @@
 
 ---
 
-## 3. Risk & Coverage Summary
-
-### Coverage Matrix
-
-| Area | # Cases | Priorities |
-|---|---|---|
-| Authentication & Authorization | 6 | Critical, High |
-| Path Parameters | 4 | Critical, High, Medium, Low |
-| Response Structure | 14 | Critical, High, Medium |
-| Pagination | 11 | Critical, High, Medium, Low |
-| Filtering | 9 | High, Medium |
-| Field Selection | 4 | High, Medium, Low |
-| Sorting | 4 | High, Medium |
-| Edge Cases | 4 | Medium, Low |
-| Security | 4 | Critical, High, Medium |
-| Performance | 3 | High, Medium |
-| **Total** | **63** | |
-
-### Bugs Found During Execution
+## Bugs Found
 
 | TC ID | Severity | Description |
 |---|---|---|
@@ -215,12 +197,3 @@
 | TC-09-03 | Low | `X-Powered-By: Express` header exposed in all responses |
 | TC-10-01 | Medium | P95 response time of 1726 ms observed across 10 requests — exceeds 500 ms SLA target |
 
-### Key Risks
-
-| Risk | Likelihood | Impact | Mitigated By |
-|---|---|---|---|
-| Tenant data isolation failure | Low | Critical | TC-01-06 *(bug found — 500 instead of 403/404)* |
-| Pagination gaps or duplicates | Low | High | TC-04-03 *(passed)* |
-| Stale cursor causing 5xx | High | High | TC-04-10 *(bug confirmed — returns 500)* |
-| Sensitive data in error responses | Low | High | TC-09-01 *(passed)* |
-| Framework fingerprinting via headers | High | Low | TC-09-03 *(X-Powered-By: Express exposed)* |

@@ -24,7 +24,7 @@
    - [TC-06 — Response Structure](#tc-06--response-structure)
    - [TC-07 — Edge Cases](#tc-07--edge-cases)
    - [TC-08 — Security](#tc-08--security)
-4. [Risk & Coverage Summary](#4-risk--coverage-summary)
+4. [Bugs Found](#bugs-found)
 
 ---
 
@@ -177,23 +177,7 @@
 
 ---
 
-## 4. Risk & Coverage Summary
-
-### Coverage Matrix
-
-| Area | # Cases | Priorities |
-|---|---|---|
-| Authentication & Authorization | 6 | Critical, High |
-| Path Parameters | 2 | High, Medium |
-| Required Fields | 8 | Critical |
-| Optional Fields | 8 | High, Medium |
-| Field Validation | 12 | High, Medium |
-| Response Structure | 5 | Critical, High, Medium |
-| Edge Cases | 3 | High, Medium |
-| Security | 3 | Critical, High, Medium |
-| **Total** | **47** | |
-
-### Bugs Found During Execution
+## Bugs Found
 
 | TC ID | Severity | Description |
 |---|---|---|
@@ -206,12 +190,3 @@
 | TC-05-07 | High | Non-existent `location` ObjectId returns `500` instead of `404` |
 | TC-08-03 | Low | `X-Powered-By: Express` header exposed in all responses |
 
-### Key Risks
-
-| Risk | Likelihood | Impact | Mitigated By |
-|---|---|---|---|
-| Unauthenticated membership creation | Low | Critical | TC-01-02, TC-01-03 |
-| Cross-org membership creation | Low | Critical | TC-01-06 *(bug — returns 500)* |
-| Invalid reference IDs causing 500s | High | High | TC-05-04 through TC-05-07 *(bugs confirmed)* |
-| Duplicate memberships created unintentionally | Medium | Medium | TC-07-01 *(POST is not idempotent — expected)* |
-| Sensitive data in error responses | Low | High | TC-08-01 *(passed)* |
