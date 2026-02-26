@@ -4,7 +4,7 @@
 
 **Endpoint:** `GET https://staging.officernd.com/api/v2/organizations/{orgSlug}/memberships/{membershipId}`
 **Auth:** OAuth 2.0 Bearer token · **Required scope:** `flex.community.memberships.read`
-**Documentation:** https://developer.officernd.com/reference/memberscontroller_getitem.md
+**Documentation:** https://developer.officernd.com/reference/membershipscontroller_getitem.md
 
 > All test cases assume a valid Bearer token with the `flex.community.memberships.read` scope unless the case explicitly tests authentication or authorization.
 
@@ -33,8 +33,6 @@
 | Authentication and authorization enforcement | UI layer |
 | Response schema validation | Third-party OAuth provider internals |
 | Path parameter validation | Load / stress testing at infrastructure scale |
-| Response consistency with the GET list endpoint | |
-| Basic security checks | |
 
 ---
 
@@ -68,7 +66,7 @@
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-03-01 | Critical | A valid `membershipId` | Send valid request; verify response is a direct object (not wrapped in an array or `results` key) and check all fields and types | Body is a flat object containing: `_id` (string, ObjectId, equals requested ID); `name` (string); `isPersonal` (boolean); `status` (string: `approved` or `not_approved`); `calculatedStatus` (string: `not_started`, `active`, `expired`, or `not_approved`); `type` (string: `month_to_month` or `fixed`); `location` (string, ObjectId); `plan` (string, ObjectId); `startDate` (string, ISO 8601); `intervalLength` (string: `once`, `hour`, `day`, or `month`); `intervalCount` (number); `isLocked` (boolean); `price` (number); `discountAmount` (number); `calculatedDiscountAmount` (number); `discountedPrice` (number); `createdAt` (string, ISO 8601); `createdBy` (string, ObjectId); `modifiedAt` (string, ISO 8601); `modifiedBy` (string, ObjectId) ✅ |
+| TC-03-01 | Critical | A valid `membershipId` | Send valid request; verify response is a direct object (not wrapped in an array or `results` key) and check all fields and types | Body is a flat object containing: `_id` (string, ObjectId, equals requested ID); `name` (string); `isPersonal` (boolean); `status` (string: `approved` or `not_approved`); `calculatedStatus` (string: `not_started`, `active`, `expired`, or `not_approved`); `type` (string: `month_to_month` or `fixed`); `location` (string, ObjectId); `plan` (string, ObjectId); `startDate` (string, ISO 8601); `intervalLength` (string: `once`, `hour`, `day`, or `month`); `intervalCount` (number); `isLocked` (boolean); `price` (number); `discountAmount` (number); `calculatedDiscountAmount` (number); `discountedPrice` (number); `createdAt` (string, ISO 8601); `createdBy` (string, ObjectId); `modifiedAt` (string, ISO 8601); `modifiedBy` (string, ObjectId); optional: `discount` (string, ObjectId); `contract` (string); `source` (string) ✅ |
 | TC-03-02 | High | A membership where `isPersonal` is `false` | Verify `company` field | `company` (string, ObjectId) is present; `member` is absent ✅ |
 | TC-03-03 | High | A membership where `isPersonal` is `true` | Verify `member` field | `member` (string, ObjectId) is present; `company` is absent ✅ |
 | TC-03-04 | High | A membership with `type` = `fixed` | Verify `endDate` field | `endDate` (string, ISO 8601) is present and after `startDate` *(not executed — no fixed-type membership available with a non-null endDate; a membership with `endDate: null` was observed)* |
@@ -76,6 +74,9 @@
 | TC-03-06 | Medium | A membership with an empty `properties` object | Verify `properties` field when empty | `properties` is present as `{}` ⚠️ **BUG: `properties` is absent in the single-item response when empty, but always present as `{}` in the GET list response — inconsistency between endpoints** |
 | TC-03-07 | Medium | A membership with a `deposit` value | Verify `deposit` field | `deposit` (number) is present ✅ |
 | TC-03-08 | Medium | — | Inspect response headers | `Content-Type: application/json; charset=utf-8` ✅ |
+| TC-03-09 | Medium | A membership with a discount definition applied | Verify `discount` field | `discount` (string, ObjectId) is present and references the discount definition *(not executed — requires a membership with a linked discount)* |
+| TC-03-10 | Medium | A membership associated with a contract | Verify `contract` field | `contract` (string) is present *(not executed — requires a membership with a linked contract)* |
+| TC-03-11 | Low | A membership with a known `source` value | Verify `source` field | `source` (string) is present *(not executed — requires a membership created via a channel that sets source)* |
 
 ---
 
