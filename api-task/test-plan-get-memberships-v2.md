@@ -22,8 +22,7 @@
    - [TC-04 — Pagination](#tc-04--pagination)
    - [TC-05 — Filtering](#tc-05--filtering)
    - [TC-06 — Field Selection](#tc-06--field-selection)
-   - [TC-07 — Sorting](#tc-07--sorting)
-   - [TC-08 — Edge Cases](#tc-08--edge-cases)
+   - [TC-07 — Edge Cases](#tc-07--edge-cases)
 3. [Bugs Found](#bugs-found)
 
 ---
@@ -75,7 +74,7 @@
 | TC-03-01c | Critical | Org with ≥1 membership | Compare `rangeStart`, `rangeEnd`, and `results.length` | `rangeStart` is the **1-indexed** position of the first result on this page; `rangeEnd` equals `rangeStart + results.length - 1` ✅ |
 | TC-03-01d | Critical | Org with > default page size memberships | Request first page with `$limit`; inspect `cursorNext` | `cursorNext` is a non-empty string when more records exist; absent when all records fit on the page ✅ |
 | TC-03-02a | High | Org with ≥1 membership | Check each object in `results` for required fields | Every object has: `_id`, `name`, `status`, `calculatedStatus`, `type`, `startDate`, `intervalLength`, `intervalCount`, `plan`, `location`, `isPersonal`, `isLocked`, `price`, `deposit`, `discountAmount`, `calculatedDiscountAmount`, `discountedPrice`, `createdAt`, `createdBy`, `modifiedAt`, `modifiedBy` ✅ |
-| TC-03-02b | High | Org with ≥1 membership | Check the type of every field in a membership object | `_id` (string, non-empty, server-generated); `name` (string); `status` (string: `approved` or `not_approved`); `calculatedStatus` (string: `not_started`, `active`, `expired`, or `not_approved`); `type` (string: `month_to_month` or `fixed`); `startDate` (string, ISO 8601); `endDate` (string, ISO 8601; present when `type=fixed`); `intervalLength` (string: `once`, `hour`, `day`, or `month`); `intervalCount` (number); `plan` (string, ObjectId); `location` (string, ObjectId); `isPersonal` (boolean); `isLocked` (boolean); `price` (number); `deposit` (number); `discountAmount` (number); `calculatedDiscountAmount` (number); `discountedPrice` (number); `properties` (object; may be absent); `company` (string, ObjectId; present when `isPersonal=false`); `member` (string, ObjectId; present when `isPersonal=true`); `createdAt` (string, ISO 8601); `createdBy` (string, ObjectId); `modifiedAt` (string, ISO 8601); `modifiedBy` (string, ObjectId) ✅ |
+| TC-03-02b | High | Org with ≥1 membership | Check the type of every field in a membership object | `_id` (string, non-empty, server-generated); `name` (string); `status` (string: `approved` or `not_approved`); `calculatedStatus` (string: `not_started`, `active`, `expired`, or `not_approved`); `type` (string: `month_to_month` or `fixed`); `startDate` (string, ISO 8601); `endDate` (string, ISO 8601; present when `type=fixed`); `intervalLength` (string: `once`, `hour`, `day`, or `month`); `intervalCount` (number); `plan` (string, ObjectId); `location` (string, ObjectId); `isPersonal` (boolean); `isLocked` (boolean); `price` (number); `deposit` (number); `discountAmount` (number); `calculatedDiscountAmount` (number); `discountedPrice` (number); `properties` (object; may be absent); `company` (string, ObjectId; present when `isPersonal=false`); `member` (string, ObjectId; present when `isPersonal=true`); `createdAt` (string, ISO 8601); `createdBy` (string, ObjectId); `modifiedAt` (string, ISO 8601); `modifiedBy` (string, ObjectId); `source` (string; may be absent); `contract` (string, ObjectId; may be absent); `discount` (string, ObjectId; may be absent) ✅ |
 | TC-03-02c | High | Org with ≥1 membership | Extract all timestamp fields from each object | `createdAt`, `modifiedAt`, and `startDate` match `YYYY-MM-DDTHH:mm:ss.sssZ`; never a plain date or Unix epoch ✅ |
 | TC-03-02d | High | Org with memberships in both `approved` and `not_approved` states | Extract `status` from every object | Values are only `approved` or `not_approved`; never absent, null, or empty ✅ |
 | TC-03-02e | High | Org with memberships in all four calculated states | Extract `calculatedStatus` from every object | Values are only `not_started`, `active`, `expired`, or `not_approved`; never absent, null, or empty ✅ |
@@ -106,19 +105,13 @@
 
 ### TC-05 — Filtering
 
-> ⚠️ **Finding:** The `createdAt` and `modifiedAt` filter parameters are **not supported** on this endpoint. All filter attempts return `400 Bad Request` with `"property createdAt should not exist"` / `"property modifiedAt should not exist"`. Test cases below document this behaviour and should be re-evaluated if filtering is added.
-
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-05-01 | High | Memberships on both sides of a known date | `GET ...?createdAt[$gt]=<ISO8601>` | ⚠️ `400 Bad Request`; `"property createdAt should not exist"` *(filtering not supported)* |
-| TC-05-02 | Medium | A membership at a known exact timestamp | `GET ...?createdAt[$gte]=<timestamp>` | ⚠️ `400 Bad Request` *(filtering not supported)* |
-| TC-05-03 | Medium | A membership at a known exact timestamp | `GET ...?createdAt[$lt]=<timestamp>` | ⚠️ `400 Bad Request` *(filtering not supported)* |
-| TC-05-04 | Medium | A membership at a known exact timestamp | `GET ...?createdAt[$lte]=<timestamp>` | ⚠️ `400 Bad Request` *(filtering not supported)* |
-| TC-05-05 | High | Memberships inside and outside a known date range | `GET ...?createdAt[$gte]=<start>&createdAt[$lte]=<end>` | ⚠️ `400 Bad Request` *(filtering not supported)* |
-| TC-05-06 | Medium | Memberships with known `modifiedAt` values | `GET ...?modifiedAt[$gt]=<ISO8601>` | ⚠️ `400 Bad Request`; `"property modifiedAt should not exist"` *(filtering not supported)* |
-| TC-05-07 | Medium | — | `GET ...?createdAt[$gt]=2099-01-01T00:00:00.000Z` | ⚠️ `400 Bad Request` *(filtering not supported)* |
-| TC-05-08 | High | — | `GET ...?createdAt[$gt]=not-a-date` | `400 Bad Request` ✅ *(rejects invalid input, though for wrong reason — param not recognised rather than invalid date format)* |
-| TC-05-09 | High | Org with ≥20 memberships spanning a date boundary | Apply `createdAt[$gte]=<date>`; paginate all pages | ⚠️ `400 Bad Request` *(filtering not supported; cannot execute)* |
+| TC-05-01 | High | Org with memberships linked to ≥2 distinct companies; known target `companyId` | `GET ...?company=<companyId>` | `200 OK`; every result has `company` equal to `<companyId>` and `isPersonal=false` |
+| TC-05-02 | High | Org with ≥1 membership | `GET ...?company=aaaaaaaaaaaaaaaaaaaaaaaa` | `200 OK`; `results: []` |
+| TC-05-03 | Medium | Org with personal memberships linked to ≥2 distinct members; known target `memberId` | `GET ...?member=<memberId>` | `200 OK`; every result has `member` equal to `<memberId>` and `isPersonal=true` |
+| TC-05-04 | Medium | Org with ≥1 membership | `GET ...?member=aaaaaaaaaaaaaaaaaaaaaaaa` | `200 OK`; `results: []` |
+| TC-05-05 | Medium | Org with memberships for a known company and a known member | `GET ...?company=<companyId>&member=<memberId>` | `200 OK`; results contain only memberships matching both filters *(document observed behaviour if AND/OR semantics are unclear)* |
 
 ---
 
@@ -133,25 +126,12 @@
 
 ---
 
-### TC-07 — Sorting
-
-> ⚠️ **Finding:** The `$sort` parameter is **not supported** on this endpoint. All sort attempts return `400 Bad Request` with `"property $sort should not exist"`. Test cases below document this behaviour.
+### TC-07 — Edge Cases
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-07-01 | High | Org with ≥2 memberships with distinct `createdAt` values | `GET ...?$sort[createdAt]=1` | ⚠️ `400 Bad Request`; `"property $sort should not exist"` *(sorting not supported)* |
-| TC-07-02 | High | Org with ≥2 memberships with distinct `createdAt` values | `GET ...?$sort[createdAt]=-1` | ⚠️ `400 Bad Request` *(sorting not supported)* |
-| TC-07-03 | Medium | — | `GET ...?$sort[nonExistentField]=1` | ⚠️ `400 Bad Request` *(sorting not supported)* |
-| TC-07-04 | High | Org with ≥3 pages of data | Sort by `createdAt` descending with `$limit=5`; paginate | ⚠️ `400 Bad Request` *(sorting not supported; cannot execute)* |
-
----
-
-### TC-08 — Edge Cases
-
-| ID | Priority | Prerequisites | Steps | Expected Result |
-|---|---|---|---|---|
-| TC-08-01 | Low | — | `GET ...?unknownParam=value` | `400 Bad Request`; `"property unknownParam should not exist"` *(API strictly rejects unknown params)* ✅ |
-| TC-08-02 | Medium | Org with ≥5 memberships | `GET ...?$limit=5&$select=_id` | `200 OK`; both params honoured; each result contains only `_id` ✅ |
+| TC-07-01 | Low | — | `GET ...?unknownParam=value` | `400 Bad Request`; `"property unknownParam should not exist"` *(API strictly rejects any undocumented param)* ✅ |
+| TC-07-02 | Medium | Org with ≥5 memberships | `GET ...?$limit=5&$select=_id` | `200 OK`; both params honoured; each result contains only `_id` ✅ |
 
 ---
 
@@ -164,6 +144,4 @@
 | TC-04-08 | Medium | `$limit=-5` returns `200` with results instead of `400` — negative values are not validated |
 | TC-04-10 | High | Invalid `$cursorNext` value returns `500` with a raw JSON parse error message instead of `400`/`422` |
 | TC-04-11 | High | Supplying both `$cursorNext` and `$cursorPrev` returns `504 Gateway Timeout` |
-| TC-05-01–09 | High | `createdAt` and `modifiedAt` filter parameters are not supported — all return `400 Bad Request` |
-| TC-07-01–04 | High | `$sort` parameter is not supported — all return `400 Bad Request` |
 
