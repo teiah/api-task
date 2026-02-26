@@ -89,6 +89,7 @@
 | TC-04-05 | High | Org with both `fixed` and `month_to_month` memberships | `GET .../count?type=fixed` (valid equality filter per API query docs) | `200 OK`; `total` equals the count of `fixed` memberships only ⚠️ **BUG: filter silently ignored; returns full unfiltered total regardless of value** |
 | TC-04-06 | Medium | — | `GET .../count?status=invalid_enum_value` | `400 Bad Request`; invalid enum value rejected ⚠️ **BUG: silently ignored; returns `200` with full total** |
 | TC-04-07 | Medium | — | `GET .../count?$limit=1` | `200 OK`; `$limit` silently ignored; full total returned *(acceptable — `$limit` is a pagination control and does not apply to a count endpoint)* ✅ |
+| TC-04-08 | Medium | — | `GET .../count?$select=total` | `200 OK`; `$select` silently ignored; full response returned *(acceptable — `$select` is a projection control and does not apply to a count endpoint)* |
 
 ---
 
@@ -98,6 +99,7 @@
 |---|---|---|---|---|
 | TC-05-01 | Medium | — | Send `POST /memberships/count` with valid token | `405 Method Not Allowed` ⚠️ **BUG: returns `404 Not Found` with `"Cannot POST ..."` instead of `405`** |
 | TC-05-02 | Low | — | Send `DELETE /memberships/count` with valid token | `405 Method Not Allowed` *(not executed — consistent behaviour expected with TC-05-01)* |
+| TC-05-03 | Low | — | Send `PUT /memberships/count` with valid token | `405 Method Not Allowed` *(not executed — consistent behaviour expected with TC-05-01)* |
 
 ---
 
