@@ -19,7 +19,7 @@
    - [TC-02 — Path Parameters](#tc-02--path-parameters)
    - [TC-03 — Response Structure](#tc-03--response-structure)
    - [TC-04 — Query Parameters](#tc-04--query-parameters)
-   - [TC-06 — HTTP Methods](#tc-06--http-methods)
+   - [TC-05 — HTTP Methods](#tc-05--http-methods)
 3. [Bugs Found](#bugs-found)
 
 ---
@@ -92,12 +92,12 @@
 
 ---
 
-### TC-06 — HTTP Methods
+### TC-05 — HTTP Methods
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-06-01 | Medium | — | Send `POST /memberships/count` with valid token | `405 Method Not Allowed` ⚠️ **BUG: returns `404 Not Found` with `"Cannot POST ..."` instead of `405`** |
-| TC-06-02 | Low | — | Send `DELETE /memberships/count` with valid token | `405 Method Not Allowed` *(not executed — consistent behaviour expected with TC-06-01)* |
+| TC-05-01 | Medium | — | Send `POST /memberships/count` with valid token | `405 Method Not Allowed` ⚠️ **BUG: returns `404 Not Found` with `"Cannot POST ..."` instead of `405`** |
+| TC-05-02 | Low | — | Send `DELETE /memberships/count` with valid token | `405 Method Not Allowed` *(not executed — consistent behaviour expected with TC-05-01)* |
 
 ---
 
@@ -113,4 +113,4 @@
 | TC-04-04 | High | `isPersonal` filter silently ignored; count is always the unfiltered total |
 | TC-04-05 | High | `type` filter silently ignored; count is always the unfiltered total |
 | TC-04-06 | Medium | Invalid enum value in query param returns `200` instead of `400` |
-| TC-06-01 | Low | `POST` on count endpoint returns `404` instead of `405 Method Not Allowed` |
+| TC-05-01 | Low | `POST` on count endpoint returns `404` instead of `405 Method Not Allowed` |

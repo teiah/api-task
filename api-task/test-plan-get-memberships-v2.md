@@ -62,7 +62,7 @@
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-02-02 | High | A slug confirmed not to exist | `GET /does-not-exist-xyz/memberships` | `404 Not Found` ⚠️ **BUG: returns `500` with `"Organization not found"`** |
+| TC-02-01 | High | A slug confirmed not to exist | `GET /does-not-exist-xyz/memberships` | `404 Not Found` ⚠️ **BUG: returns `500` with `"Organization not found"`** |
 
 ---
 
@@ -160,7 +160,7 @@
 | TC ID | Severity | Description |
 |---|---|---|
 | TC-01-06 | Critical | Cross-org request returns `500` instead of `403`/`404` — organization existence is revealed and status code is incorrect |
-| TC-02-02 | High | Non-existent `orgSlug` returns `500` instead of `404` |
+| TC-02-01 | High | Non-existent `orgSlug` returns `500` instead of `404` |
 | TC-04-08 | Medium | `$limit=-5` returns `200` with results instead of `400` — negative values are not validated |
 | TC-04-10 | High | Invalid `$cursorNext` value returns `500` with a raw JSON parse error message instead of `400`/`422` |
 | TC-04-11 | High | Supplying both `$cursorNext` and `$cursorPrev` returns `504 Gateway Timeout` |

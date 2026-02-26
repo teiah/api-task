@@ -59,7 +59,7 @@
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
 | TC-02-01 | Critical | A valid ObjectId that does not match any membership | `DELETE .../memberships/aaaaaaaaaaaaaaaaaaaaaaaa` | `404 Not Found`; body: `{"statusCode":404,"message":"Item with Id (aaaaaaaaaaaaaaaaaaaaaaaa)","error":"Not Found"}` ✅ |
-| TC-02-03 | High | — | `DELETE /organizations/does-not-exist-xyz/memberships/{membershipId}` | `404 Not Found` ⚠️ **BUG: returns `500` with `"Organization not found"`** |
+| TC-02-02 | High | — | `DELETE /organizations/does-not-exist-xyz/memberships/{membershipId}` | `404 Not Found` ⚠️ **BUG: returns `500` with `"Organization not found"`** |
 
 ---
 
@@ -96,7 +96,6 @@
 | TC ID | Severity | Description |
 |---|---|---|
 | TC-01-06 | Critical | Wrong org returns `500` instead of `403`/`404` |
-| TC-02-02 | Medium | Non-ObjectId `membershipId` returns `404` instead of `400` — invalid format not caught at the validation layer |
-| TC-02-03 | High | Non-existent `orgSlug` returns `500` instead of `404` |
+| TC-02-02 | High | Non-existent `orgSlug` returns `500` instead of `404` |
 | TC-03-04 | Low | `properties` always present in DELETE response (including `{}`); absent in GET single when empty — inconsistency between endpoints |
 | TC-04-01 | High | Deleting an invoiced membership returns `500` instead of `409`/`422` — business rule violation surfaced as internal server error |

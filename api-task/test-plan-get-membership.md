@@ -4,6 +4,7 @@
 
 **Endpoint:** `GET https://staging.officernd.com/api/v2/organizations/{orgSlug}/memberships/{membershipId}`
 **Auth:** OAuth 2.0 Bearer token · **Required scope:** `flex.community.memberships.read`
+**Documentation:** https://developer.officernd.com/reference/memberscontroller_getitem.md
 
 > All test cases assume a valid Bearer token with the `flex.community.memberships.read` scope unless the case explicitly tests authentication or authorization.
 
@@ -19,8 +20,7 @@
    - [TC-02 — Path Parameters](#tc-02--path-parameters)
    - [TC-03 — Response Structure](#tc-03--response-structure)
    - [TC-04 — Query Parameters](#tc-04--query-parameters)
-   - [TC-05 — Consistency](#tc-05--consistency)
-   - [TC-07 — HTTP Methods](#tc-07--http-methods)
+   - [TC-05 — HTTP Methods](#tc-05--http-methods)
 3. [Bugs Found](#bugs-found)
 
 ---
@@ -60,7 +60,7 @@
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
 | TC-02-01 | Critical | A valid ObjectId that does not belong to any membership | `GET .../memberships/aaaaaaaaaaaaaaaaaaaaaaaa` | `404 Not Found`; body: `{"statusCode":404,"message":"Item with Id (aaaaaaaaaaaaaaaaaaaaaaaa) not found","error":"Not Found"}` ✅ *(returned 404; error message truncated to `"Item with Id (aaaaaaaaaaaaaaaaaaaaaaaa)"` — missing "not found" suffix)* |
-| TC-02-04 | Medium | — | `GET /organizations/does-not-exist-xyz/memberships/{membershipId}` | `404 Not Found` ⚠️ **BUG: returns `500` with `"Organization not found"`** |
+| TC-02-02 | Medium | — | `GET /organizations/does-not-exist-xyz/memberships/{membershipId}` | `404 Not Found` ⚠️ **BUG: returns `500` with `"Organization not found"`** |
 
 ---
 
@@ -90,18 +90,11 @@
 
 ---
 
-### TC-05 — Consistency
+### TC-05 — HTTP Methods
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-
----
-
-### TC-07 — HTTP Methods
-
-| ID | Priority | Prerequisites | Steps | Expected Result |
-|---|---|---|---|---|
-| TC-07-01 | Medium | — | Send `POST /memberships/{id}` with valid token | `405 Method Not Allowed` ⚠️ **BUG: returns `404 Not Found` with `"Cannot POST ..."` instead of `405`** |
+| TC-05-01 | Medium | — | Send `POST /memberships/{id}` with valid token | `405 Method Not Allowed` ⚠️ **BUG: returns `404 Not Found` with `"Cannot POST ..."` instead of `405`** |
 
 ---
 
@@ -110,10 +103,9 @@
 | TC ID | Severity | Description |
 |---|---|---|
 | TC-01-06 | Critical | Wrong org returns `500` instead of `403`/`404` |
-| TC-02-02 | Medium | Non-ObjectId `membershipId` returns `404` instead of `400` — invalid format not caught at the validation layer |
 | TC-02-01 | Low | `404` error message for a non-existent ID is truncated: `"Item with Id (xxx)"` — missing the "not found" suffix |
-| TC-02-04 | High | Non-existent `orgSlug` returns `500` instead of `404` |
+| TC-02-02 | High | Non-existent `orgSlug` returns `500` instead of `404` |
 | TC-03-06 | Medium | `properties` field absent in single-item response when empty (`{}`); always present in GET list response — inconsistency between endpoints |
 | TC-04-01 | Low | Unknown query params silently ignored instead of rejected with `400` — inconsistent with GET list |
 | TC-04-02 | Low | `$select` silently ignored; field selection not supported on single-item endpoint |
-| TC-07-01 | Low | `POST` on single-item path returns `404` instead of `405 Method Not Allowed` |
+| TC-05-01 | Low | `POST` on single-item path returns `404` instead of `405 Method Not Allowed` |

@@ -61,7 +61,7 @@
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
 | TC-02-01 | Critical | A valid ObjectId that does not match any membership | `PUT .../memberships/aaaaaaaaaaaaaaaaaaaaaaaa` with valid body | `404 Not Found`; body: `{"statusCode":404,"message":"Item with Id (aaaaaaaaaaaaaaaaaaaaaaaa)","error":"Not Found"}` ✅ |
-| TC-02-03 | High | — | `PUT /organizations/does-not-exist-xyz/memberships/{membershipId}` | `404 Not Found` ⚠️ **BUG: returns `500` with `"Organization not found"`** |
+| TC-02-02 | High | — | `PUT /organizations/does-not-exist-xyz/memberships/{membershipId}` | `404 Not Found` ⚠️ **BUG: returns `500` with `"Organization not found"`** |
 
 ---
 
@@ -126,8 +126,7 @@
 | TC ID | Severity | Description |
 |---|---|---|
 | TC-01-06 | Critical | Wrong org returns `500` instead of `403`/`404` |
-| TC-02-02 | Medium | Non-ObjectId `membershipId` returns `404` instead of `400` |
-| TC-02-03 | High | Non-existent `orgSlug` returns `500` instead of `404` |
+| TC-02-02 | High | Non-existent `orgSlug` returns `500` instead of `404` |
 | TC-03-06 | High | Updating `startDate` on an invoiced membership returns `500` instead of `409`/`422` — business logic error surfaced as internal server error |
 | TC-03-07 | High | `endDate` before `startDate` returns `500` instead of `400`/`422` — validation error surfaced as internal server error |
 | TC-03-09 | Medium | Invalid `startDate` format returns `500` (business rule evaluated before format validation) instead of `400` |
