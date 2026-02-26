@@ -102,6 +102,16 @@ Categories are used as `###` section headings. Use these names consistently acro
 
 ---
 
+## Commit Message Convention
+
+- Start with a verb followed by a colon: `add:`, `update:`, `fix:`, `delete:`, `refactor:`, `rename:`, etc.
+- Keep the message short
+- Use lowercase only
+
+**Example:** `add: test cases for pagination edge cases`
+
+---
+
 ## General Testing Notes
 
 - **Do not send live requests** to the API while writing or reviewing test plans.
