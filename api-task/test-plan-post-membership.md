@@ -118,10 +118,12 @@
 | TC-04-03 | High | — | Include `"type": "fixed"` and a valid `endDate` after `startDate` | `201 Created`; `type=fixed`; `endDate` matches value sent ✅ |
 | TC-04-04 | High | — | Include `"type": "fixed"` without `endDate` | `400 Bad Request`; message: `"End date is required for fixed memberships"` ✅ |
 | TC-04-05 | Medium | — | Include `"intervalLength": "once"` | `201 Created`; `intervalLength=once` in response ✅ |
-| TC-04-06 | Medium | — | Include `"intervalLength": "hour"` | `201 Created`; `intervalLength=hour` in response |
-| TC-04-07 | Medium | — | Include `"intervalLength": "day"` | `201 Created`; `intervalLength=day` in response |
+| TC-04-06 | Medium | — | Include `"intervalLength": "hour"` | `201 Created`; `intervalLength=hour` in response ✅ |
+| TC-04-07 | Medium | — | Include `"intervalLength": "day"` | `201 Created`; `intervalLength=day` in response ✅ |
 | TC-04-08 | Medium | — | Include `"endDate"` set before `startDate` | `400 Bad Request` ⚠️ **BUG: returns `500` with `"Membership startDate should be before the endDate"`** |
 | TC-04-09 | Medium | — | Include `"properties": {"key1": "value1"}` | `201 Created`; `properties` in response equals `{"key1": "value1"}` ✅ |
+| TC-04-10 | Medium | — | Include `"type": "fixed"` with `endDate` equal to `startDate` | `201 Created`; zero-length fixed membership accepted ✅ *(note: this may be unintended business logic — a fixed membership with no duration has no practical meaning)* |
+| TC-04-11 | Medium | — | Include both `company` and `member` fields with `isPersonal=true` | `400 Bad Request` or `422 Unprocessable Entity` ⚠️ **BUG: returns `500` with `"Member with id X is an individual hence membership should not have its team property set."` — also leaks internal field name `team` instead of `company`** |
 
 ---
 
@@ -141,6 +143,11 @@
 | TC-05-10 | Medium | — | Include `"status"` field in body (server-managed field) | `400 Bad Request`; message: `"property status should not exist"` ✅ |
 | TC-05-11 | Medium | — | Include any unknown field (e.g. `"unknownField": "value"`) | `400 Bad Request`; message: `"property unknownField should not exist"` ✅ |
 | TC-05-12 | Medium | — | Send request without `Content-Type: application/json` header | `400 Bad Request`; body is not parsed as JSON — field-level validation errors returned ✅ |
+| TC-05-13 | High | — | Set `company` to a non-ObjectId string when `isPersonal=false` | `400 Bad Request` ⚠️ **BUG: returns `500` with `"Cast to ObjectId failed for value \"notanid\" (type string) at path \"team\""` — leaks internal field name `team` instead of `company`; should be `400`** |
+| TC-05-14 | High | — | Set `company` to a valid ObjectId format that does not exist when `isPersonal=false` | `404 Not Found` ⚠️ **BUG: returns `500` with `"Specified team was not found."` — leaks internal field name `team` instead of `company`; should be `404`** |
+| TC-05-15 | High | — | Set `member` to a non-ObjectId string when `isPersonal=true` | `400 Bad Request` ⚠️ **BUG: returns `500` with `"Cast to ObjectId failed for value \"notanid\" (type string) at path \"member\""` — should be `400`** |
+| TC-05-16 | High | — | Set `member` to a valid ObjectId format that does not exist when `isPersonal=true` | `404 Not Found` ⚠️ **BUG: returns `500` with `"Specified member was not found."` — should be `404`** |
+| TC-05-17 | Medium | — | Set `isPersonal` to string `"true"` instead of boolean | `400 Bad Request`; message array: `["isPersonal must be a boolean value", "A member field must be provided if the isPersonal field is set to true."]` ✅ |
 
 ---
 
@@ -162,6 +169,8 @@
 | TC-07-01 | High | — | Send two identical POST requests in quick succession | Two separate `201` responses each with a distinct `_id` — POST is **not idempotent** ✅ |
 | TC-07-02 | Medium | — | Send a very long string as `name` (e.g. 10 000 characters) | `201 Created` or `400 Bad Request` with a max-length error *(document observed behaviour)* |
 | TC-07-03 | Medium | — | Send `startDate` with a past date (e.g. `2018-01-01`) | `201 Created`; `calculatedStatus` reflects actual state based on dates ✅ *(endDate=2027 test confirmed past startDate is accepted)* |
+| TC-07-04 | Medium | — | Set `name` to a whitespace-only string (e.g. `"   "`) | `400 Bad Request` ⚠️ **BUG: returns `201 Created`; whitespace-only name `"   "` accepted and stored — the API validates that `name` is a non-empty string but does not trim or reject whitespace-only values** |
+| TC-07-05 | Medium | — | Set a required field to explicit `null` (e.g. `"name": null`) | `400 Bad Request`; message: `"name must be a string"` ✅ |
 
 ---
 
@@ -170,10 +179,16 @@
 | TC ID | Severity | Description |
 |---|---|---|
 | TC-01-06 | Critical | Wrong org returns `500` instead of `403`/`404` |
-| TC-04-07 | High | `endDate` before `startDate` returns `500` instead of `400`/`422` |
+| TC-04-08 | High | `endDate` before `startDate` returns `500` instead of `400`/`422` |
+| TC-04-11 | High | Both `company` and `member` with `isPersonal=true` returns `500` instead of `400`/`422`; error message also leaks internal field name `team` |
 | TC-05-01 | High | Empty `name` string returns `500` instead of `400` |
 | TC-05-04 | High | Non-ObjectId `location` string returns `500` BSON cast error instead of `400` |
 | TC-05-05 | High | Non-ObjectId `plan` string returns `500` instead of `400` |
 | TC-05-06 | High | Non-existent `plan` ObjectId returns `500` instead of `404` |
 | TC-05-07 | High | Non-existent `location` ObjectId returns `500` instead of `404` |
+| TC-05-13 | High | Non-ObjectId `company` string returns `500` BSON cast error instead of `400`; error message leaks internal field name `team` |
+| TC-05-14 | High | Non-existent `company` ObjectId returns `500` with `"Specified team was not found."` instead of `404`; error message leaks internal field name `team` |
+| TC-05-15 | High | Non-ObjectId `member` string returns `500` BSON cast error instead of `400` |
+| TC-05-16 | High | Non-existent `member` ObjectId returns `500` instead of `404` |
+| TC-07-04 | Medium | Whitespace-only `name` returns `201 Created`; value stored without trimming or validation |
 
