@@ -159,6 +159,9 @@
 | TC-06-02 | High | Valid request body | Check `status` and `calculatedStatus` enum values in the `201` response | `status` is `approved` by default; `calculatedStatus` is `active` for a membership with a current `startDate`; neither field is null or absent ✅ |
 | TC-06-03 | High | Valid request body | Check that `createdAt` and `modifiedAt` are equal and close to the request time | Both timestamps match each other and fall within a few seconds of the POST request time ✅ |
 | TC-06-04 | Medium | Valid request body | Inspect response headers | `Content-Type: application/json; charset=utf-8` ✅ |
+| TC-06-05 | High | — | POST with a future `startDate` (e.g. `2030-01-01T00:00:00.000Z`) | `201 Created`; `calculatedStatus=not_started` ✅ |
+| TC-06-06 | High | — | POST with `type=fixed`, `startDate` in the past, and `endDate` also in the past (e.g. `startDate=2024-01-01`, `endDate=2024-06-01`) | `201 Created`; `calculatedStatus=expired` ✅ |
+| TC-06-07 | Medium | — | POST a valid membership and verify whether `status=not_approved` or `calculatedStatus=not_approved` can be returned | `201 Created`; `status=approved` in all observed cases — `not_approved` values are not triggerable via POST; `status` is rejected as a request field (TC-05-10) and the API always defaults to `approved` on creation ✅ |
 
 ---
 
