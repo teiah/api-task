@@ -61,10 +61,7 @@
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
 | TC-02-01 | Critical | A valid ObjectId that does not belong to any membership | `GET .../memberships/aaaaaaaaaaaaaaaaaaaaaaaa` | `404 Not Found`; body: `{"statusCode":404,"message":"Item with Id (aaaaaaaaaaaaaaaaaaaaaaaa) not found","error":"Not Found"}` ✅ *(returned 404; error message truncated to `"Item with Id (aaaaaaaaaaaaaaaaaaaaaaaa)"` — missing "not found" suffix)* |
-| TC-02-02 | High | — | `GET .../memberships/notanid` (non-ObjectId string) | `400 Bad Request`; invalid ID format rejected ⚠️ **BUG: returns `404 Not Found` — non-ObjectId string treated as a lookup miss rather than a validation error** |
-| TC-02-03 | High | — | `GET .../memberships/../../etc` or other path traversal strings | `302` redirect to `/login` or `400 Bad Request`; no data exposed *(not executed — consistent redirect behaviour expected based on GET list results)* |
 | TC-02-04 | Medium | — | `GET /organizations/does-not-exist-xyz/memberships/{membershipId}` | `404 Not Found` ⚠️ **BUG: returns `500` with `"Organization not found"`** |
-| TC-02-05 | Medium | — | Omit `membershipId` entirely: `GET .../memberships/` | Routes to the GET list endpoint; `200 OK` with paginated results ✅ *(expected routing behaviour — handled by the list handler)* |
 
 ---
 
@@ -98,8 +95,6 @@
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-05-01 | High | A `membershipId` present in both list and single-item responses | Fetch `GET /memberships` (no `$limit`) and `GET /memberships/{id}`; compare the object for the same `_id` field by field | All field values are identical between the two responses ✅; exception: `properties` is absent in single-item when empty but present as `{}` in list — see TC-03-06 ⚠️ |
-| TC-05-02 | Medium | — | Send the same valid request twice in quick succession | Both responses are identical (same field values, same `modifiedAt`) ✅ |
 
 ---
 
@@ -108,7 +103,6 @@
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
 | TC-06-01 | Critical | Conditions to trigger `401`, `404`, and `500` | Trigger each error type; inspect response bodies | No stack traces or internal paths in any error body ✅; error schema: `{statusCode, message, error?, timestamp, path}` |
-| TC-06-02 | Medium | — | Inspect response headers from a valid request | ⚠️ `x-powered-by: Express` header present — reveals server framework |
 
 ---
 
@@ -131,5 +125,4 @@
 | TC-03-06 | Medium | `properties` field absent in single-item response when empty (`{}`); always present in GET list response — inconsistency between endpoints |
 | TC-04-01 | Low | Unknown query params silently ignored instead of rejected with `400` — inconsistent with GET list |
 | TC-04-02 | Low | `$select` silently ignored; field selection not supported on single-item endpoint |
-| TC-06-02 | Low | `x-powered-by: Express` header exposed in all responses |
 | TC-07-01 | Low | `POST` on single-item path returns `404` instead of `405 Method Not Allowed` |

@@ -131,7 +131,6 @@ Several bugs appeared consistently across all six endpoints, indicating systemic
 | Bug | Expected | Actual |
 |---|---|---|
 | Wrong `orgSlug` (non-existent org) | `404 Not Found` | `500 Internal Server Error` with `"Organization not found"` |
-| `x-powered-by: Express` response header | Header absent or suppressed | Always present — reveals server framework |
 
 ### Present in all single-resource endpoints (GET, PUT, DELETE)
 

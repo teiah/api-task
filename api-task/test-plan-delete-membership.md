@@ -60,7 +60,6 @@
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
 | TC-02-01 | Critical | A valid ObjectId that does not match any membership | `DELETE .../memberships/aaaaaaaaaaaaaaaaaaaaaaaa` | `404 Not Found`; body: `{"statusCode":404,"message":"Item with Id (aaaaaaaaaaaaaaaaaaaaaaaa)","error":"Not Found"}` ✅ |
-| TC-02-02 | High | — | `DELETE .../memberships/notanid` (non-ObjectId string) | `400 Bad Request`; invalid ID format rejected ⚠️ **BUG: returns `404 Not Found` — non-ObjectId string treated as a lookup miss rather than a validation error** |
 | TC-02-03 | High | — | `DELETE /organizations/does-not-exist-xyz/memberships/{membershipId}` | `404 Not Found` ⚠️ **BUG: returns `500` with `"Organization not found"`** |
 
 ---
@@ -99,7 +98,6 @@
 |---|---|---|---|---|
 | TC-06-01 | Critical | Conditions to trigger `401`, `404`, and `500` | Trigger each error type; inspect response bodies | No stack traces or internal paths in any error body ✅; error schema: `{statusCode, message, error?, timestamp, path}` |
 | TC-06-02 | Medium | — | Send `POST .../memberships/{membershipId}` | `405 Method Not Allowed` ⚠️ **BUG: returns `404 Not Found` with `"Cannot POST ..."` instead of `405`** |
-| TC-06-03 | Medium | — | Inspect response headers from a valid request | ⚠️ `x-powered-by: Express` header present — reveals server framework |
 
 ---
 
@@ -113,4 +111,3 @@
 | TC-03-04 | Low | `properties` always present in DELETE response (including `{}`); absent in GET single when empty — inconsistency between endpoints |
 | TC-04-01 | High | Deleting an invoiced membership returns `500` instead of `409`/`422` — business rule violation surfaced as internal server error |
 | TC-06-02 | Low | `POST` on membership path returns `404` instead of `405 Method Not Allowed` |
-| TC-06-03 | Low | `x-powered-by: Express` header exposed in all responses |

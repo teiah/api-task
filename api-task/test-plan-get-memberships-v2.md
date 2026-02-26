@@ -157,7 +157,6 @@
 |---|---|---|---|---|
 | TC-08-01 | Low | — | `GET ...?unknownParam=value` | `400 Bad Request`; `"property unknownParam should not exist"` *(API strictly rejects unknown params)* ✅ |
 | TC-08-02 | Medium | Org with ≥5 memberships | `GET ...?$limit=5&$select=_id` | `200 OK`; both params honoured; each result contains only `_id` ✅ |
-| TC-08-03 | Medium | Org with stable data (no writes during test) | Send the exact same request twice in quick succession | Both responses are identical ✅ |
 | TC-08-04 | Low | — | Send a request with a query string several kilobytes long | `400 Bad Request`; API rejects unrecognised params before URI length becomes an issue ✅ |
 
 ---

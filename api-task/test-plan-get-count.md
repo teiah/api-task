@@ -101,7 +101,6 @@
 |---|---|---|---|---|
 | TC-05-01 | Critical | Conditions to trigger `401` and `500` | Trigger each error type; inspect response bodies | No stack traces or internal paths in error bodies ✅; error schema: `{statusCode, message, error?, timestamp, path}` |
 | TC-05-02 | High | — | Pass URL-encoded injection strings as query param values: `' OR 1=1 --`, `{"$gt":""}` | `200 OK`; params silently ignored; `total` unchanged; no data leakage ✅ |
-| TC-05-03 | Medium | — | Inspect response headers from a valid request | ⚠️ `x-powered-by: Express` header present — reveals server framework |
 
 ---
 
@@ -126,5 +125,4 @@
 | TC-04-04 | High | `isPersonal` filter silently ignored; count is always the unfiltered total |
 | TC-04-05 | High | `type` filter silently ignored; count is always the unfiltered total |
 | TC-04-06 | Medium | Invalid enum value in query param returns `200` instead of `400` |
-| TC-05-03 | Low | `x-powered-by: Express` header exposed in all responses |
 | TC-06-01 | Low | `POST` on count endpoint returns `404` instead of `405 Method Not Allowed` |

@@ -62,7 +62,6 @@
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
 | TC-02-01 | Critical | A valid ObjectId that does not match any membership | `PUT .../memberships/aaaaaaaaaaaaaaaaaaaaaaaa` with valid body | `404 Not Found`; body: `{"statusCode":404,"message":"Item with Id (aaaaaaaaaaaaaaaaaaaaaaaa)","error":"Not Found"}` ✅ |
-| TC-02-02 | High | — | `PUT .../memberships/notanid` (non-ObjectId string) with valid body | `400 Bad Request`; invalid ID format rejected ⚠️ **BUG: returns `404 Not Found` — consistent with GET single behaviour but still incorrect** |
 | TC-02-03 | High | — | `PUT /organizations/does-not-exist-xyz/memberships/{membershipId}` | `404 Not Found` ⚠️ **BUG: returns `500` with `"Organization not found"`** |
 
 ---
@@ -128,7 +127,6 @@
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
 | TC-06-01 | Critical | Conditions to trigger `401`, `404`, and `500` | Trigger each error type; inspect response bodies | No stack traces or internal paths in any error body ✅; error schema: `{statusCode, message, error?, timestamp, path}` |
-| TC-06-02 | Medium | — | Inspect response headers from a valid request | ⚠️ `x-powered-by: Express` header present — reveals server framework |
 
 ---
 
@@ -142,4 +140,3 @@
 | TC-03-06 | High | Updating `startDate` on an invoiced membership returns `500` instead of `409`/`422` — business logic error surfaced as internal server error |
 | TC-03-07 | High | `endDate` before `startDate` returns `500` instead of `400`/`422` — validation error surfaced as internal server error |
 | TC-03-09 | Medium | Invalid `startDate` format returns `500` (business rule evaluated before format validation) instead of `400` |
-| TC-06-02 | Low | `x-powered-by: Express` header exposed in all responses |

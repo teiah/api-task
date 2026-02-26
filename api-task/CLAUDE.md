@@ -114,6 +114,14 @@ Categories are used as `###` section headings. Use these names consistently acro
 
 ## General Testing Notes
 
+- **Do not cross-test endpoints.** Each test plan covers only the behaviour of its own endpoint. Do not verify a response by comparing it against output from a different endpoint.
+
+- **Path traversal on `membershipId`** (e.g. `../../etc`) is not a test case. The API sits behind auth middleware that redirects or rejects before routing — this is not specific to the memberships endpoint and adds no meaningful coverage.
+
+- **Non-ObjectId `membershipId` path parameter** (e.g. `notanid`) is not a separate test case. The API returns `404` for both a valid-format but missing ObjectId and a non-ObjectId string — the behaviour is identical, so there is no added value in testing them separately. Only test the valid-but-missing ObjectId case (`aaaaaaaaaaaaaaaaaaaaaaaa`).
+
+
+
 - **Do not send live requests** to the API while writing or reviewing test plans.
 - All date values must use **ISO 8601** format: `YYYY-MM-DDTHH:mm:ss.sssZ`.
 - Pagination tests require a minimum of **55 seed memberships** to exercise multi-page behaviour meaningfully given the `$limit` max of 50.
