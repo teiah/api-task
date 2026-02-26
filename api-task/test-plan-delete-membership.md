@@ -20,7 +20,6 @@
    - [TC-03 — Response Structure](#tc-03--response-structure)
    - [TC-04 — Business Rules](#tc-04--business-rules)
    - [TC-05 — Idempotency](#tc-05--idempotency)
-   - [TC-06 — Security](#tc-06--security)
 3. [Bugs Found](#bugs-found)
 
 ---
@@ -92,15 +91,6 @@
 
 ---
 
-### TC-06 — Security
-
-| ID | Priority | Prerequisites | Steps | Expected Result |
-|---|---|---|---|---|
-| TC-06-01 | Critical | Conditions to trigger `401`, `404`, and `500` | Trigger each error type; inspect response bodies | No stack traces or internal paths in any error body ✅; error schema: `{statusCode, message, error?, timestamp, path}` |
-| TC-06-02 | Medium | — | Send `POST .../memberships/{membershipId}` | `405 Method Not Allowed` ⚠️ **BUG: returns `404 Not Found` with `"Cannot POST ..."` instead of `405`** |
-
----
-
 ## Bugs Found
 
 | TC ID | Severity | Description |
@@ -110,4 +100,3 @@
 | TC-02-03 | High | Non-existent `orgSlug` returns `500` instead of `404` |
 | TC-03-04 | Low | `properties` always present in DELETE response (including `{}`); absent in GET single when empty — inconsistency between endpoints |
 | TC-04-01 | High | Deleting an invoiced membership returns `500` instead of `409`/`422` — business rule violation surfaced as internal server error |
-| TC-06-02 | Low | `POST` on membership path returns `404` instead of `405 Method Not Allowed` |

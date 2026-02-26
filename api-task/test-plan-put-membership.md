@@ -22,7 +22,6 @@
    - [TC-03 — Request Body: Accepted Fields](#tc-03--request-body-accepted-fields)
    - [TC-04 — Request Body: Rejected Fields](#tc-04--request-body-rejected-fields)
    - [TC-05 — Response Structure](#tc-05--response-structure)
-   - [TC-06 — Security](#tc-06--security)
 3. [Bugs Found](#bugs-found)
 
 ---
@@ -119,14 +118,6 @@
 | TC-05-02 | High | A valid `membershipId` | Send a PUT that changes `price`; compare `modifiedAt` before and after | `modifiedAt` is updated to the current timestamp; `modifiedBy` reflects the authenticated user's ID ✅ |
 | TC-05-03 | Medium | A valid `membershipId` | Send `PUT` with `{}` (no changes); compare `modifiedAt` before and after | `modifiedAt` is **not** updated — the server does not create a revision when no data changes ✅ |
 | TC-05-04 | Medium | — | Inspect response headers from a valid request | `Content-Type: application/json; charset=utf-8` ✅ |
-
----
-
-### TC-06 — Security
-
-| ID | Priority | Prerequisites | Steps | Expected Result |
-|---|---|---|---|---|
-| TC-06-01 | Critical | Conditions to trigger `401`, `404`, and `500` | Trigger each error type; inspect response bodies | No stack traces or internal paths in any error body ✅; error schema: `{statusCode, message, error?, timestamp, path}` |
 
 ---
 

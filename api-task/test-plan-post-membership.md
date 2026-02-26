@@ -23,7 +23,6 @@
    - [TC-05 — Field Validation](#tc-05--field-validation)
    - [TC-06 — Response Structure](#tc-06--response-structure)
    - [TC-07 — Edge Cases](#tc-07--edge-cases)
-   - [TC-08 — Security](#tc-08--security)
 4. [Bugs Found](#bugs-found)
 
 ---
@@ -92,7 +91,6 @@
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
 | TC-02-01 | High | A slug confirmed not to exist | `POST /organizations/does-not-exist/memberships` with valid body | `404 Not Found` *(not executed separately — consistent with GET behaviour which returns `500`)* |
-| TC-02-02 | Medium | — | `POST /organizations//memberships` (empty slug) | `401 Unauthorized` *(routes to a different path without org context)* |
 
 ---
 
@@ -167,16 +165,6 @@
 
 ---
 
-### TC-08 — Security
-
-| ID | Priority | Prerequisites | Steps | Expected Result |
-|---|---|---|---|---|
-| TC-08-01 | Critical | Conditions to trigger `401`, `500`, and `400` | Trigger each error type; inspect response bodies | No stack traces or internal paths in error bodies ✅; error schema: `{statusCode, message, error?, timestamp, path}` |
-| TC-08-02 | High | — | Set `name` to an injection string: `"' OR 1=1 --"` | `201 Created`; value stored as a plain string; no query manipulation or data leakage ✅ |
-| TC-08-03 | Medium | — | Inspect response headers from a successful `201` | ⚠️ `X-Powered-By: Express` header present — reveals server framework |
-
----
-
 ## Bugs Found
 
 | TC ID | Severity | Description |
@@ -188,5 +176,4 @@
 | TC-05-05 | High | Non-ObjectId `plan` string returns `500` instead of `400` |
 | TC-05-06 | High | Non-existent `plan` ObjectId returns `500` instead of `404` |
 | TC-05-07 | High | Non-existent `location` ObjectId returns `500` instead of `404` |
-| TC-08-03 | Low | `X-Powered-By: Express` header exposed in all responses |
 

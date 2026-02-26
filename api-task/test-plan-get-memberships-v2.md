@@ -8,7 +8,7 @@
 
 > All test cases assume a valid Bearer token with the `flex.community.memberships.read` scope unless the case explicitly tests authentication or authorization.
 
-> **Test execution note:** Cases TC-01-04, TC-01-05, and TC-02-01 could not be executed — they require credentials not available in this session (an expired token, a restricted-scope token, and a token for a separate org respectively).
+> **Test execution note:** Cases TC-01-04, TC-01-05, could not be executed — they require credentials not available in this session (an expired token, a restricted-scope token, and a token for a separate org respectively).
 
 ---
 
@@ -24,8 +24,6 @@
    - [TC-06 — Field Selection](#tc-06--field-selection)
    - [TC-07 — Sorting](#tc-07--sorting)
    - [TC-08 — Edge Cases](#tc-08--edge-cases)
-   - [TC-09 — Security](#tc-09--security)
-   - [TC-10 — Performance](#tc-10--performance)
 3. [Bugs Found](#bugs-found)
 
 ---
@@ -64,10 +62,7 @@
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-02-01 | Critical | Orgs A and B with distinct memberships | Request memberships for Org A, then Org B; compare IDs | No IDs overlap between responses *(not executed — requires two org tokens)* |
 | TC-02-02 | High | A slug confirmed not to exist | `GET /does-not-exist-xyz/memberships` | `404 Not Found` ⚠️ **BUG: returns `500` with `"Organization not found"`** |
-| TC-02-03 | Medium | — | Try `orgSlug` values: `../../etc`, `' OR 1=1`, URL-encoded variants | `302` redirect to `/login`; no data exposed ✅ |
-| TC-02-04 | Low | — | `GET /api/v2/organizations//memberships` (empty slug) | `401 Unauthorized`; the empty segment routes to a different path *(no org context; treated as unauthenticated)* ✅ |
 
 ---
 
@@ -157,28 +152,6 @@
 |---|---|---|---|---|
 | TC-08-01 | Low | — | `GET ...?unknownParam=value` | `400 Bad Request`; `"property unknownParam should not exist"` *(API strictly rejects unknown params)* ✅ |
 | TC-08-02 | Medium | Org with ≥5 memberships | `GET ...?$limit=5&$select=_id` | `200 OK`; both params honoured; each result contains only `_id` ✅ |
-| TC-08-04 | Low | — | Send a request with a query string several kilobytes long | `400 Bad Request`; API rejects unrecognised params before URI length becomes an issue ✅ |
-
----
-
-### TC-09 — Security
-
-| ID | Priority | Prerequisites | Steps | Expected Result |
-|---|---|---|---|---|
-| TC-09-01 | Critical | Conditions to trigger `401`, `500`, and `400` | Trigger each error; inspect response bodies | No stack traces or internal paths in any response ✅; error body schema: `{statusCode, message, error?, timestamp, path}` |
-| TC-09-02 | High | — | Inject `' OR 1=1 --`, `{"$gt": ""}`, `; DROP TABLE memberships;` into `$limit` | `400 Bad Request`; no 5xx; no unexpected data ✅ |
-| TC-09-03 | Medium | — | Inspect response headers from a successful request | ⚠️ `X-Powered-By: Express` header is present — reveals the server framework; `Server: cloudflare` |
-| TC-09-04 | High | — | Send the request over `http://` | `301`/`308` redirect to HTTPS, or connection refused *(not executed — HTTPS enforced at network level)* |
-
----
-
-### TC-10 — Performance
-
-| ID | Priority | Prerequisites | Steps | Expected Result |
-|---|---|---|---|---|
-| TC-10-01 | Medium | Org with ≥1 membership; timing utility | Send a valid request 10 times; record response times | ⚠️ P95 = **1726 ms** across 10 requests; most responses ~120 ms but one spike at 1726 ms — exceeds 500 ms SLA target |
-| TC-10-02 | Medium | Org with ≥50 memberships; timing utility | `GET ...?$limit=50` repeated 5 times | P95 = **124 ms** ✅ *(only 21 memberships in test org; results still within SLA)* |
-| TC-10-03 | High | — | Send a rapid burst of requests until rate-limited | *(not executed — rate limit threshold unknown; excluded to avoid unintended service impact)* |
 
 ---
 
@@ -193,6 +166,4 @@
 | TC-04-11 | High | Supplying both `$cursorNext` and `$cursorPrev` returns `504 Gateway Timeout` |
 | TC-05-01–09 | High | `createdAt` and `modifiedAt` filter parameters are not supported — all return `400 Bad Request` |
 | TC-07-01–04 | High | `$sort` parameter is not supported — all return `400 Bad Request` |
-| TC-09-03 | Low | `X-Powered-By: Express` header exposed in all responses |
-| TC-10-01 | Medium | P95 response time of 1726 ms observed across 10 requests — exceeds 500 ms SLA target |
 

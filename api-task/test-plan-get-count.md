@@ -19,7 +19,6 @@
    - [TC-02 — Path Parameters](#tc-02--path-parameters)
    - [TC-03 — Response Structure](#tc-03--response-structure)
    - [TC-04 — Query Parameters](#tc-04--query-parameters)
-   - [TC-05 — Security](#tc-05--security)
    - [TC-06 — HTTP Methods](#tc-06--http-methods)
 3. [Bugs Found](#bugs-found)
 
@@ -60,8 +59,6 @@
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
 | TC-02-01 | High | A slug confirmed not to exist | `GET /organizations/does-not-exist-xyz/memberships/count` | `404 Not Found` ⚠️ **BUG: returns `500` with `"Organization not found"`** |
-| TC-02-02 | Medium | — | Try `orgSlug` values: `../../etc`, `' OR 1=1`, URL-encoded variants | `302` redirect to `/login`; no data exposed *(consistent with GET list behaviour)* |
-| TC-02-03 | Low | — | `GET /organizations//memberships/count` (empty slug) | `401 Unauthorized`; empty segment routes to a different path without org context *(consistent with GET list behaviour)* |
 
 ---
 
@@ -92,15 +89,6 @@
 | TC-04-05 | High | Org with both `fixed` and `month_to_month` memberships | `GET .../count?type=fixed` (valid equality filter per API query docs) | `200 OK`; `total` equals the count of `fixed` memberships only ⚠️ **BUG: filter silently ignored; returns full unfiltered total regardless of value** |
 | TC-04-06 | Medium | — | `GET .../count?status=invalid_enum_value` | `400 Bad Request`; invalid enum value rejected ⚠️ **BUG: silently ignored; returns `200` with full total** |
 | TC-04-07 | Medium | — | `GET .../count?$limit=1` | `200 OK`; `$limit` silently ignored; full total returned *(acceptable — `$limit` is a pagination control and does not apply to a count endpoint)* ✅ |
-
----
-
-### TC-05 — Security
-
-| ID | Priority | Prerequisites | Steps | Expected Result |
-|---|---|---|---|---|
-| TC-05-01 | Critical | Conditions to trigger `401` and `500` | Trigger each error type; inspect response bodies | No stack traces or internal paths in error bodies ✅; error schema: `{statusCode, message, error?, timestamp, path}` |
-| TC-05-02 | High | — | Pass URL-encoded injection strings as query param values: `' OR 1=1 --`, `{"$gt":""}` | `200 OK`; params silently ignored; `total` unchanged; no data leakage ✅ |
 
 ---
 

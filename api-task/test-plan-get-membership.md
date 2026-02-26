@@ -20,7 +20,6 @@
    - [TC-03 — Response Structure](#tc-03--response-structure)
    - [TC-04 — Query Parameters](#tc-04--query-parameters)
    - [TC-05 — Consistency](#tc-05--consistency)
-   - [TC-06 — Security](#tc-06--security)
    - [TC-07 — HTTP Methods](#tc-07--http-methods)
 3. [Bugs Found](#bugs-found)
 
@@ -95,14 +94,6 @@
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-
----
-
-### TC-06 — Security
-
-| ID | Priority | Prerequisites | Steps | Expected Result |
-|---|---|---|---|---|
-| TC-06-01 | Critical | Conditions to trigger `401`, `404`, and `500` | Trigger each error type; inspect response bodies | No stack traces or internal paths in any error body ✅; error schema: `{statusCode, message, error?, timestamp, path}` |
 
 ---
 

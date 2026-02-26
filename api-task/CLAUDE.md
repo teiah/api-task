@@ -84,8 +84,8 @@ Categories are used as `###` section headings. Use these names consistently acro
 - `Field Selection` — `$select`
 - `Sorting` — `$sort`
 - `Edge Cases` — boundary values, unexpected input combinations, idempotency
-- `Security` — injection, header leakage, HTTPS enforcement
-- `Performance` — response time, rate limiting
+- ~~`Security`~~ — excluded from scope
+- ~~`Performance`~~ — excluded from scope
 
 ---
 
