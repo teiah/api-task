@@ -4,6 +4,7 @@
 
 **Endpoint:** `PUT https://staging.officernd.com/api/v2/organizations/{orgSlug}/memberships/{membershipId}`
 **Auth:** OAuth 2.0 Bearer token · **Required scope:** `flex.community.memberships.update`
+**Documentation:** https://developer.officernd.com/reference/membershipscontroller_updateitem.md
 
 > All test cases assume a valid Bearer token with the `flex.community.memberships.update` scope unless the case explicitly tests authentication or authorization.
 
@@ -22,6 +23,7 @@
    - [TC-03 — Request Body: Accepted Fields](#tc-03--request-body-accepted-fields)
    - [TC-04 — Request Body: Rejected Fields](#tc-04--request-body-rejected-fields)
    - [TC-05 — Response Structure](#tc-05--response-structure)
+   - [TC-06 — Edge Cases](#tc-06--edge-cases)
 3. [Bugs Found](#bugs-found)
 
 ---
@@ -79,6 +81,9 @@
 | TC-03-08 | Medium | A valid `membershipId` | `PUT .../memberships/{id}` with `{}` (empty body) | `200 OK`; membership unchanged; `modifiedAt` not updated ✅ |
 | TC-03-09 | Medium | A valid `membershipId` | `PUT .../memberships/{id}` with `{"startDate": "not-a-date"}` | `400 Bad Request`; message: `"startDate must be a valid ISO 8601 date string"` ⚠️ **BUG: returns `500` with `"Cannot update membership's start date when the membership is invoiced"` — ISO validation bypassed; business rule evaluated first** |
 | TC-03-10 | Medium | A valid `membershipId` | `PUT .../memberships/{id}` with all three accepted fields: `{"startDate": "…", "endDate": "…", "price": 200}` | `200 OK`; all three fields updated in response *(not executed on invoiced membership — startDate fails; test with non-invoiced membership)* |
+| TC-03-11 | Medium | A valid `membershipId` | `PUT .../memberships/{id}` with `{"endDate": "not-a-date"}` | `400 Bad Request`; message: `"endDate must be a valid ISO 8601 date string"` *(verify whether the same 500 bug seen in TC-03-09 applies here too)* |
+| TC-03-12 | Medium | A valid `membershipId` | `PUT .../memberships/{id}` with `{"startDate": null}` | `400 Bad Request`; `startDate` cannot be nulled; or `200 OK` with `startDate` cleared *(document observed behaviour; compare with TC-03-03 where `endDate: null` succeeds)* |
+| TC-03-13 | Medium | A valid `membershipId` | `PUT .../memberships/{id}` with `{"price": -1}` | `400 Bad Request`; message indicates price must be non-negative; or `200 OK` if the API permits negative prices *(document observed behaviour)* |
 
 ---
 
@@ -118,6 +123,15 @@
 | TC-05-02 | High | A valid `membershipId` | Send a PUT that changes `price`; compare `modifiedAt` before and after | `modifiedAt` is updated to the current timestamp; `modifiedBy` reflects the authenticated user's ID ✅ |
 | TC-05-03 | Medium | A valid `membershipId` | Send `PUT` with `{}` (no changes); compare `modifiedAt` before and after | `modifiedAt` is **not** updated — the server does not create a revision when no data changes ✅ |
 | TC-05-04 | Medium | — | Inspect response headers from a valid request | `Content-Type: application/json; charset=utf-8` ✅ |
+
+---
+
+### TC-06 — Edge Cases
+
+| ID | Priority | Prerequisites | Steps | Expected Result |
+|---|---|---|---|---|
+| TC-06-01 | Medium | — | Send `PUT` with a malformed JSON body (e.g. `{startDate:}`) and `Content-Type: application/json` | `400 Bad Request`; message indicates invalid JSON; no stack trace leaked |
+| TC-06-02 | Low | A valid `membershipId` with `startDate` set | `PUT .../memberships/{id}` with `{"endDate": "<same ISO value as current startDate>"}` | `200 OK`; equal `startDate` and `endDate` are permitted ✅ |
 
 ---
 
