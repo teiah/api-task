@@ -4,6 +4,7 @@
 
 **Endpoint:** `DELETE https://staging.officernd.com/api/v2/organizations/{orgSlug}/memberships/{membershipId}`
 **Auth:** OAuth 2.0 Bearer token · **Required scope:** `flex.community.memberships.delete`
+**Documentation:** https://developer.officernd.com/reference/membershipscontroller_deleteitem.md
 
 > All test cases assume a valid Bearer token with the `flex.community.memberships.delete` scope unless the case explicitly tests authentication or authorization.
 
@@ -80,6 +81,7 @@
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
 | TC-04-01 | Critical | A membership that has at least one associated invoice | `DELETE .../memberships/{invoicedMembershipId}` | `409 Conflict` or `422 Unprocessable Entity`; message indicates membership has invoices and cannot be deleted ⚠️ **BUG: returns `500` with `"Cannot delete invoiced membership"` — business rule violation surfaced as internal server error** |
+| TC-04-02 | Medium | A membership with `isLocked: true` | `DELETE .../memberships/{lockedMembershipId}` | `409 Conflict` or `403 Forbidden`; message indicates the membership is locked and cannot be deleted; or `200 OK` if locking does not protect against deletion *(document observed behaviour)* |
 
 ---
 
