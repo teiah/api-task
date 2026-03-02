@@ -8,7 +8,6 @@
 
 > All test cases assume a valid Bearer token with the `flex.community.memberships.update` scope unless the case explicitly tests authentication or authorization.
 
-> **Test execution note:** TC-01-04 and TC-01-05 could not be executed — they require an expired token and a restricted-scope token respectively.
 
 > **Accepted fields:** Only `startDate`, `endDate`, and `price` are accepted in the request body. Every other field — including `name`, `type`, `plan`, `location`, `company`, `isPersonal`, `intervalLength`, `properties`, `status`, and all server-managed fields — returns `400 "property X should not exist"`. An empty body `{}` is accepted as a no-op.
 

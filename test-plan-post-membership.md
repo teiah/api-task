@@ -7,7 +7,6 @@
 
 > All test cases assume a valid Bearer token with the `flex.community.memberships.create` scope and `Content-Type: application/json` unless the case explicitly tests authentication or headers.
 
-> **Test execution note:** TC-01-04 and TC-01-05 could not be executed — they require an expired token and a restricted-scope token respectively.
 
 ---
 
