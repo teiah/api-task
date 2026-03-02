@@ -10,12 +10,12 @@
 
 | File | Description |
 |---|---|
-| `test-plan-get-memberships.md` | Test plan — List memberships (GET) |
-| `test-plan-post-membership.md` | Test plan — Add membership (POST) |
-| `test-plan-get-count.md` | Test plan — Get membership count (GET) |
-| `test-plan-get-membership.md` | Test plan — Get single membership (GET) |
-| `test-plan-put-membership.md` | Test plan — Update membership (PUT) |
-| `test-plan-delete-membership.md` | Test plan — Delete membership (DELETE) |
-| `testing-approach.md` | Test case structure and conventions |
-| `bug-summary.md` | Cross-cutting bugs found during execution |
+| [`test-plan-get-memberships.md`](test-plan-get-memberships.md) | Test plan — List memberships (GET) |
+| [`test-plan-post-membership.md`](test-plan-post-membership.md) | Test plan — Add membership (POST) |
+| [`test-plan-get-count.md`](test-plan-get-count.md) | Test plan — Get membership count (GET) |
+| [`test-plan-get-membership.md`](test-plan-get-membership.md) | Test plan — Get single membership (GET) |
+| [`test-plan-put-membership.md`](test-plan-put-membership.md) | Test plan — Update membership (PUT) |
+| [`test-plan-delete-membership.md`](test-plan-delete-membership.md) | Test plan — Delete membership (DELETE) |
+| [`testing-approach.md`](testing-approach.md) | Test case structure and conventions |
+| [`bug-summary.md`](bug-summary.md) | Cross-cutting bugs found during execution |
 
