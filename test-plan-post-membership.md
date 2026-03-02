@@ -142,10 +142,6 @@
 | TC-05-10 | Medium | — | Include `"status"` field in body (server-managed field) | `400 Bad Request`; message: `"property status should not exist"` ✅ |
 | TC-05-11 | Medium | — | Include any unknown field (e.g. `"unknownField": "value"`) | `400 Bad Request`; message: `"property unknownField should not exist"` ✅ |
 | TC-05-12 | Medium | — | Send request without `Content-Type: application/json` header | `400 Bad Request`; body is not parsed as JSON — field-level validation errors returned ✅ |
-| TC-05-13 | High | — | Set `company` to a non-ObjectId string when `isPersonal=false` | `400 Bad Request` ⚠️ **BUG: returns `500` with `"Cast to ObjectId failed for value \"notanid\" (type string) at path \"team\""` — leaks internal field name `team` instead of `company`; should be `400`** |
-| TC-05-14 | High | — | Set `company` to a valid ObjectId format that does not exist when `isPersonal=false` | `404 Not Found` ⚠️ **BUG: returns `500` with `"Specified team was not found."` — leaks internal field name `team` instead of `company`; should be `404`** |
-| TC-05-15 | High | — | Set `member` to a non-ObjectId string when `isPersonal=true` | `400 Bad Request` ⚠️ **BUG: returns `500` with `"Cast to ObjectId failed for value \"notanid\" (type string) at path \"member\""` — should be `400`** |
-| TC-05-16 | High | — | Set `member` to a valid ObjectId format that does not exist when `isPersonal=true` | `404 Not Found` ⚠️ **BUG: returns `500` with `"Specified member was not found."` — should be `404`** |
 | TC-05-17 | Medium | — | Set `isPersonal` to string `"true"` instead of boolean | `400 Bad Request`; message array: `["isPersonal must be a boolean value", "A member field must be provided if the isPersonal field is set to true."]` ✅ |
 
 ---
@@ -188,9 +184,5 @@
 | TC-05-05 | High | Non-ObjectId `plan` string returns `500` instead of `400` |
 | TC-05-06 | High | Non-existent `plan` ObjectId returns `500` instead of `404` |
 | TC-05-07 | High | Non-existent `location` ObjectId returns `500` instead of `404` |
-| TC-05-13 | High | Non-ObjectId `company` string returns `500` BSON cast error instead of `400`; error message leaks internal field name `team` |
-| TC-05-14 | High | Non-existent `company` ObjectId returns `500` with `"Specified team was not found."` instead of `404`; error message leaks internal field name `team` |
-| TC-05-15 | High | Non-ObjectId `member` string returns `500` BSON cast error instead of `400` |
-| TC-05-16 | High | Non-existent `member` ObjectId returns `500` instead of `404` |
 | TC-07-04 | Medium | Whitespace-only `name` returns `201 Created`; value stored without trimming or validation |
 
