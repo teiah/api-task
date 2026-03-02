@@ -16,7 +16,7 @@ This document describes the approach, structure, and conventions used across the
 
 | File | Method | Endpoint | Test Cases |
 |---|---|---|---|
-| `test-plan-get-memberships-v2.md` | GET | `/memberships` | 63 |
+| `test-plan-get-memberships.md` | GET | `/memberships` | 63 |
 | `test-plan-post-membership.md` | POST | `/memberships` | 47 |
 | `test-plan-get-count.md` | GET | `/memberships/count` | 37 |
 | `test-plan-get-membership.md` | GET | `/memberships/{membershipId}` | 35 |
@@ -25,32 +25,6 @@ This document describes the approach, structure, and conventions used across the
 | **Total** | | | **249** |
 
 ---
-
-## Testing Approach
-
-### Execution Against Staging
-
-All test cases were executed live against the staging environment using short Python scripts (`urllib.request`). Responses — including HTTP status codes, response bodies, and headers — were captured and used to set expected results directly in the test plan tables. Cases that could not be executed (e.g. expired tokens, restricted-scope tokens) are marked `*(not executed)*` with the reason stated.
-
-This approach means every expected result in these plans is grounded in observed behaviour, not assumption. Where the observed behaviour differed from what the API specification or HTTP standards require, the case is marked with ⚠️ **BUG** and included in the **Bugs Found** section.
-
-### State Management
-
-For mutating endpoints (POST, PUT, DELETE), test execution followed this pattern:
-
-- **POST**: Created memberships were left in the staging org. The org already contained seed data and the additional memberships do not affect other test plans.
-- **PUT**: Each change was restored to the original field values immediately after the test case, using a follow-up PUT. The membership used (`69973aa8b93b7f45ab1360cf`) was confirmed to be in its original state after testing.
-- **DELETE**: A dedicated throwaway membership (`DELETE-TEST`) was created via POST immediately before deletion tests. The original membership was not deleted — it has associated invoices and the API correctly prevents its deletion.
-
-### Cases Not Executed
-
-Some cases require credentials or infrastructure not available during testing:
-
-| Reason | Affected cases |
-|---|---|
-| Expired Bearer token | TC-01-04 in every plan |
-| Token with restricted scope | TC-01-05 in every plan |
-| Empty org (zero memberships) | TC-03-03 in GET list and GET count |
 
 ---
 
@@ -93,19 +67,19 @@ The same category names are used across all plans for consistency:
 |---|---|
 | Authentication & Authorization | Token presence, format, expiry, scope enforcement, tenant isolation |
 | Path Parameters | `orgSlug` and `membershipId` validation |
-| Request Body | Payload field acceptance and rejection for POST and PUT |
+| Required Fields | POST — required field presence, types, and formats |
+| Optional Fields | POST — optional field behaviour and defaults |
+| Field Validation | POST — invalid values, type mismatches, enum violations |
+| Request Body: Accepted Fields | PUT — fields the endpoint will accept and apply |
+| Request Body: Rejected Fields | PUT — fields the endpoint rejects with `400` |
 | Response Structure | Field presence, types, enum values, contract compliance |
 | Pagination | `$limit`, `$cursorNext`, `$cursorPrev` behaviour |
 | Filtering | Query parameter filter operators |
 | Field Selection | `$select` behaviour |
-| Sorting | `$sort` behaviour |
-| Query Parameters | General query parameter handling (count endpoint) |
+| Query Parameters | General query parameter handling |
 | Business Rules | Domain constraints enforced at the API layer |
 | Idempotency | Behaviour of repeated identical requests |
-| Consistency | Response parity between related endpoints |
-| Security | Injection, header leakage, error body content |
-| Performance | Response time, rate limiting |
-| HTTP Methods | Correct handling of unsupported methods |
+| Edge Cases | Boundary values, unexpected input combinations |
 
 ---
 
@@ -130,6 +104,8 @@ Several bugs appeared consistently across all six endpoints, indicating systemic
 
 | Bug | Expected | Actual |
 |---|---|---|
+| Expired token returns same generic `401` as invalid token | `401` with expiry-specific message | Generic `{"statusCode":401,"message":"Unauthorized access","error":"Unauthorized"}` — clients cannot distinguish cause |
+| Token with missing scope returns `401` instead of `403` | `403 Forbidden` | `401 Unauthorized` — token is valid but lacks authorisation; incorrect status code |
 | Wrong `orgSlug` (non-existent org) | `404 Not Found` | `500 Internal Server Error` with `"Organization not found"` |
 
 ### Present in all single-resource endpoints (GET, PUT, DELETE)
