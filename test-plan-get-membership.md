@@ -20,7 +20,7 @@
    - [TC-02 — Path Parameters](#tc-02--path-parameters)
    - [TC-03 — Response Structure - Verify MembershipResultDto](#tc-03--response-structure---verify-membershipresultdto)
    - [TC-04 — Query Parameters](#tc-04--query-parameters)
-   - [TC-05 — HTTP Methods](#tc-05--http-methods)
+
 3. [Bugs Found](#bugs-found)
 
 ---
@@ -98,14 +98,6 @@
 
 ---
 
-### TC-05 — HTTP Methods
-
-| ID | Priority | Prerequisites | Steps | Expected Result |
-|---|---|---|---|---|
-| TC-05-01 | Medium | — | Send `POST /memberships/{id}` with valid token | `405 Method Not Allowed` ⚠️ **BUG: returns `404 Not Found` with `"Cannot POST ..."` instead of `405`** |
-
----
-
 ## Bugs Found
 
 | TC ID | Severity | Description |
@@ -116,4 +108,4 @@
 | TC-03-06 | Medium | `properties` field absent in single-item response when empty (`{}`); always present in GET list response — inconsistency between endpoints |
 | TC-04-01 | Low | Unknown query params silently ignored instead of rejected with `400` — inconsistent with GET list |
 | TC-04-02 | Low | `$select` silently ignored; field selection not supported on single-item endpoint |
-| TC-05-01 | Low | `POST` on single-item path returns `404` instead of `405 Method Not Allowed` |
+
