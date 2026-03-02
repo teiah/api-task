@@ -90,10 +90,12 @@
 | TC-04-05 | High | Org with < 50 memberships | `GET ...?$limit=50` | All records returned in one page; `cursorNext` absent ✅ |
 | TC-04-06 | High | Org with ≥1 membership | `GET ...?$limit=51` | `400 Bad Request`; message: `"$limit must not be greater than 50"` ✅ |
 | TC-04-07 | Medium | Org with ≥1 membership | `GET ...?$limit=0` | `200 OK`; returns 20 results; `cursorNext` present *(falls back to default page size of 20; does not reject)* ✅ |
-| TC-04-08 | Medium | Org with ≥1 membership | `GET ...?$limit=-5` | `200 OK`; returns results with `cursorNext` present ⚠️ **BUG: negative value not rejected; treated as a valid limit** |
+| TC-04-08 | Medium | Org with ≥1 membership | `GET ...?$limit=-5` | `400 Bad Request` ⚠️ **BUG: returns `200` with 3 results and `cursorNext` — result count does not match `abs(-5)=5`; negative value not rejected** |
 | TC-04-09 | Medium | — | `GET ...?$limit=abc` | `400 Bad Request`; message: `"$limit must be a number conforming to the specified constraints"` ✅ |
 | TC-04-10 | High | — | Pass a tampered or random string as `$cursorNext` | `400` or `422` ⚠️ **BUG: returns `500` with JSON parse error message** |
 | TC-04-11 | Low | Two valid cursor values from a prior request | Supply both `$cursorNext` and `$cursorPrev` in one request | `400 Bad Request` ⚠️ **BUG: returns `504 Gateway Timeout`** |
+| TC-04-12 | Critical | — | `GET ...?$limit=-2` | `400 Bad Request` ⚠️ **BUG: returns `500 Internal Server Error`; `"Cannot read properties of undefined (reading '_id')"` — server crash** |
+| TC-04-13 | High | Org with ≥1 membership | `GET ...?$limit=-1` | `400 Bad Request` ⚠️ **BUG: returns `200` with all results; no pagination cap applied — behaves as "no limit"** |
 
 ---
 
@@ -135,7 +137,9 @@
 |---|---|---|
 | TC-01-06 | Critical | Cross-org request returns `500` instead of `403`/`404` — organization existence is revealed and status code is incorrect |
 | TC-02-01 | High | Non-existent `orgSlug` returns `500` instead of `404` |
-| TC-04-08 | Medium | `$limit=-5` returns `200` with results instead of `400` — negative values are not validated |
+| TC-04-08 | Medium | `$limit=-5` returns `200` with 3 results instead of `400` — result count doesn't match `abs(-5)=5`; negative values not validated |
+| TC-04-12 | Critical | `$limit=-2` causes `500 Internal Server Error` — `"Cannot read properties of undefined (reading '_id')"` — server crash on negative limit |
+| TC-04-13 | High | `$limit=-1` returns `200` with all results instead of `400` — no pagination cap applied; behaves as "no limit" |
 | TC-04-10 | High | Invalid `$cursorNext` value returns `500` with a raw JSON parse error message instead of `400`/`422` |
 | TC-04-11 | High | Supplying both `$cursorNext` and `$cursorPrev` returns `504 Gateway Timeout` |
 

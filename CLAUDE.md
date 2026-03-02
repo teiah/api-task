@@ -6,7 +6,7 @@ This project produces a comprehensive test plan for the **OfficeRnD Flex Members
 
 Every test plan document in this project must:
 - Cover all six endpoints (see below)
-- Follow the table-based style established in `test-plan-get-memberships-v2.md`
+- Follow the table-based style established in `test-plan-get-memberships.md`
 - Assign a **Priority** (Critical / High / Medium / Low) to every test case
 - Include a **Bugs Found** section at the end (omit if no bugs were observed)
 - Never send live requests to the API — all cases are design-only
@@ -93,7 +93,7 @@ Categories are used as `###` section headings. Use these names consistently acro
 
 | File | Endpoint | Status |
 |---|---|---|
-| `test-plan-get-memberships-v2.md` | GET list | Draft |
+| `test-plan-get-memberships.md` | GET list | Draft |
 | `test-plan-post-membership.md` | POST | — |
 | `test-plan-get-count.md` | GET count | — |
 | `test-plan-get-membership.md` | GET single | — |
