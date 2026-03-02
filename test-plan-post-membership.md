@@ -156,7 +156,7 @@
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
 | TC-06-01 | Critical | Valid request body | Send a valid POST; apply MembershipResultDto verification to the `201` response — see [GET single test plan TC-03-01b – TC-03-10](test-plan-get-membership.md#tc-03--response-structure---verify-membershipresultdto) | All field-presence, type, timestamp-format, enum, and conditional-field checks pass ✅ |
-| TC-06-02 | High | Valid request body | Check `status` and `calculatedStatus` enum values in the `201` response | `status` is `approved` by default; `calculatedStatus` is `active` for a membership with a current `startDate`; neither field is null or absent ✅ |
+| TC-06-02 | High | Valid request body | Check `status` and `calculatedStatus` default values in the `201` response | `status` is `approved` by default; `calculatedStatus` is `active` for a membership with a current `startDate` ✅ |
 | TC-06-03 | High | Valid request body | Check that `createdAt` and `modifiedAt` are equal and close to the request time | Both timestamps match each other and fall within a few seconds of the POST request time ✅ |
 | TC-06-04 | Medium | Valid request body | Inspect response headers | `Content-Type: application/json; charset=utf-8` ✅ |
 | TC-06-05 | High | — | POST with a future `startDate` (e.g. `2030-01-01T00:00:00.000Z`) | `201 Created`; `calculatedStatus=not_started` ✅ |
