@@ -46,7 +46,7 @@
 | TC-01-01 | Critical | A valid `membershipId` | `GET /{orgSlug}/memberships/{membershipId}` with valid Bearer token | `200 OK`; body is a single membership object containing `_id` equal to the requested ID ✅ |
 | TC-01-02 | Critical | — | Send request with no `Authorization` header | `401 Unauthorized`; body: `{"statusCode":401,"message":"Unauthorized access","error":"Unauthorized"}` ✅ |
 | TC-01-03 | High | — | Send `Authorization: Bearer not_a_real_token` | `401 Unauthorized`; same error schema as TC-01-02 ✅ |
-| TC-01-04 | High | An expired Bearer token | Send request with expired token | `401 Unauthorized`; error indicates expiry; no stack trace ✅ |
+| TC-01-04 | High | An expired Bearer token | Send request with expired token | `401 Unauthorized`; same generic error schema as TC-01-02; no expiry-specific message ✅ |
 | TC-01-05 | Critical | Token without `flex.community.memberships.read` scope | Send request with restricted token | `403 Forbidden`; response identifies the missing permission ⚠️ **BUG: returns `401 Unauthorized` instead of `403 Forbidden`** |
 | TC-01-06 | Critical | `orgSlug` belonging to a different org | `GET /organizations/some-other-org/memberships/{membershipId}` with valid token | `403 Forbidden` or `404 Not Found` ⚠️ **BUG: returns `500` with `"Organization not found"`** |
 
@@ -101,6 +101,7 @@
 
 | TC ID | Severity | Description |
 |---|---|---|
+| TC-01-04 | Low | Expired token returns the same generic `401 Unauthorized` error as an invalid token — response does not indicate expiry; clients cannot distinguish the cause |
 | TC-01-05 | High | Token with missing scope returns `401 Unauthorized` instead of `403 Forbidden` — `401` implies unauthenticated; the token is valid but lacks authorisation |
 | TC-01-06 | Critical | Wrong org returns `500` instead of `403`/`404` |
 | TC-02-01 | Low | `404` error message for a non-existent ID is truncated: `"Item with Id (xxx)"` — missing the "not found" suffix |

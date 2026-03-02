@@ -8,7 +8,6 @@
 
 > All test cases assume a valid Bearer token with the `flex.community.memberships.read` scope unless the case explicitly tests authentication or authorization.
 
-> **Test execution note:** Cases TC-01-04, TC-01-05, could not be executed — they require credentials not available in this session (an expired token, a restricted-scope token, and a token for a separate org respectively).
 
 ---
 
@@ -51,8 +50,8 @@
 | TC-01-01 | Critical | Org with ≥1 membership | `GET /{orgSlug}/memberships` with a valid Bearer token | `200 OK`; body contains `results` array and pagination metadata ✅ |
 | TC-01-02 | Critical | — | Send the request with no `Authorization` header | `401 Unauthorized`; body: `{"statusCode":401,"message":"Unauthorized access","error":"Unauthorized"}` ✅ |
 | TC-01-03 | High | — | `Authorization: Bearer not_a_real_token` | `401 Unauthorized`; same error schema as TC-01-02 ✅ |
-| TC-01-04 | High | An expired Bearer token | Send the request with the expired token | `401 Unauthorized`; error indicates expiry; no stack trace *(not executed)* |
-| TC-01-05 | Critical | Token without `flex.community.memberships.read` scope | Send a valid request with the restricted token | `403 Forbidden`; response identifies the missing permission *(not executed)* |
+| TC-01-04 | High | An expired Bearer token | Send the request with the expired token | `401 Unauthorized`; same generic error schema as TC-01-02; no expiry-specific message ✅ |
+| TC-01-05 | Critical | Token without `flex.community.memberships.read` scope | Send a valid request with the restricted token | `403 Forbidden`; response identifies the missing permission ⚠️ **BUG: returns `401 Unauthorized` instead of `403 Forbidden`** |
 | TC-01-06 | Critical | Token for Org A; `orgSlug` for Org B | `GET /{orgSlug_B}/memberships` using Org A's token | `403 Forbidden` or `404 Not Found`; no Org B data returned ⚠️ **BUG: returns `500` with `"Organization not found"`** |
 
 ---
@@ -135,6 +134,8 @@
 
 | TC ID | Severity | Description |
 |---|---|---|
+| TC-01-04 | Low | Expired token returns the same generic `401 Unauthorized` error as an invalid token — response does not indicate expiry; clients cannot distinguish the cause |
+| TC-01-05 | High | Token with missing scope returns `401 Unauthorized` instead of `403 Forbidden` — `401` implies unauthenticated; the token is valid but lacks authorisation |
 | TC-01-06 | Critical | Cross-org request returns `500` instead of `403`/`404` — organization existence is revealed and status code is incorrect |
 | TC-02-01 | High | Non-existent `orgSlug` returns `500` instead of `404` |
 | TC-04-08 | Medium | `$limit=-5` returns `200` with 3 results instead of `400` — result count doesn't match `abs(-5)=5`; negative values not validated |

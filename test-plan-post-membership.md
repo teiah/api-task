@@ -79,8 +79,8 @@
 | TC-01-01 | Critical | Valid request body | `POST /memberships` with valid Bearer token and minimal valid body | `201 Created`; body contains `_id` and all expected fields ✅ |
 | TC-01-02 | Critical | — | Send request with no `Authorization` header | `401 Unauthorized`; body: `{"statusCode":401,"message":"Unauthorized access","error":"Unauthorized"}` ✅ |
 | TC-01-03 | High | — | Send `Authorization: Bearer badtoken` | `401 Unauthorized`; same error schema as TC-01-02 ✅ |
-| TC-01-04 | High | An expired Bearer token | Send request with expired token | `401 Unauthorized`; error indicates expiry; no stack trace *(not executed)* |
-| TC-01-05 | Critical | Token without `flex.community.memberships.create` scope | Send valid body with restricted token | `403 Forbidden`; response identifies missing permission *(not executed)* |
+| TC-01-04 | High | An expired Bearer token | Send request with expired token | `401 Unauthorized`; same generic error schema as TC-01-02; no expiry-specific message ✅ |
+| TC-01-05 | Critical | Token without `flex.community.memberships.create` scope | Send valid body with restricted token | `403 Forbidden`; response identifies missing permission ⚠️ **BUG: returns `401 Unauthorized` instead of `403 Forbidden`** |
 | TC-01-06 | Critical | Valid token; `orgSlug` belonging to a different org | `POST /organizations/some-other-org/memberships` with valid body | `403 Forbidden` or `404 Not Found` ⚠️ **BUG: returns `500` with `"Organization not found"`** |
 
 ---
@@ -174,6 +174,8 @@
 
 | TC ID | Severity | Description |
 |---|---|---|
+| TC-01-04 | Low | Expired token returns the same generic `401 Unauthorized` error as an invalid token — response does not indicate expiry; clients cannot distinguish the cause |
+| TC-01-05 | High | Token with missing scope returns `401 Unauthorized` instead of `403 Forbidden` — `401` implies unauthenticated; the token is valid but lacks authorisation |
 | TC-01-06 | Critical | Wrong org returns `500` instead of `403`/`404` |
 | TC-04-07 | High | `endDate` before `startDate` returns `500` instead of `400`/`422` |
 | TC-04-10 | High | Both `company` and `member` with `isPersonal=true` returns `500` instead of `400`/`422`; error message also leaks internal field name `team` |
