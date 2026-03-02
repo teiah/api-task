@@ -98,7 +98,7 @@
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-03-01 | Critical | — | Send body with all required fields and verify each is accepted with the correct type: `name` (string), `startDate` (string, ISO 8601), `location` (string, ObjectId), `plan` (string, ObjectId), `company` (string, ObjectId) when `isPersonal=false`; or `member` (string, ObjectId) when `isPersonal=true` | `201 Created`; all sent fields reflected in the response ✅ |
+| TC-03-01 | Critical | — | Send body with all required fields and no optional fields; verify each required field is accepted with the correct type: `name` (string), `startDate` (string, ISO 8601), `location` (string, ObjectId), `plan` (string, ObjectId), `company` (string, ObjectId) when `isPersonal=false`; or `member` (string, ObjectId) when `isPersonal=true` | `201 Created`; all sent fields reflected in the response; server applies defaults for unset optional fields: `isPersonal=false`, `type=month_to_month`, `intervalLength=month`, `intervalCount=1`, `isLocked=false`, `price=0` ✅ |
 | TC-03-02 | Critical | — | Omit `name` | `400 Bad Request`; message: `"name must be a string"` ✅ |
 | TC-03-03 | Critical | — | Omit `startDate` | `400 Bad Request`; message: `"startDate must be a valid ISO 8601 date string"` ✅ |
 | TC-03-04 | Critical | — | Omit `location` | `400 Bad Request`; message: `"location must be a string"` ✅ |
@@ -114,16 +114,15 @@
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
 | TC-04-01 | High | — | Send valid body including all optional fields and verify each is accepted with the correct type: `isPersonal` (boolean), `type` (string: `month_to_month` or `fixed`), `endDate` (string, ISO 8601, required when `type=fixed`), `intervalLength` (string: `once`, `hour`, `day`, or `month`), `properties` (object) | `201 Created`; all sent optional fields reflected in the response ✅ |
-| TC-04-02 | High | — | Send valid body without any optional fields | `201 Created`; server applies defaults: `isPersonal=false` (boolean), `type=month_to_month` (string), `intervalLength=month` (string), `intervalCount=1` (number), `isLocked=false` (boolean), `price=0` (number) ✅ |
-| TC-04-03 | High | — | Include `"type": "fixed"` and a valid `endDate` after `startDate` | `201 Created`; `type=fixed`; `endDate` matches value sent ✅ |
-| TC-04-04 | High | — | Include `"type": "fixed"` without `endDate` | `400 Bad Request`; message: `"End date is required for fixed memberships"` ✅ |
-| TC-04-05 | Medium | — | Include `"intervalLength": "once"` | `201 Created`; `intervalLength=once` in response ✅ |
-| TC-04-06 | Medium | — | Include `"intervalLength": "hour"` | `201 Created`; `intervalLength=hour` in response ✅ |
-| TC-04-07 | Medium | — | Include `"intervalLength": "day"` | `201 Created`; `intervalLength=day` in response ✅ |
-| TC-04-08 | Medium | — | Include `"endDate"` set before `startDate` | `400 Bad Request` ⚠️ **BUG: returns `500` with `"Membership startDate should be before the endDate"`** |
-| TC-04-09 | Medium | — | Include `"properties": {"key1": "value1"}` | `201 Created`; `properties` in response equals `{"key1": "value1"}` ✅ |
-| TC-04-10 | Medium | — | Include `"type": "fixed"` with `endDate` equal to `startDate` | `201 Created`; zero-length fixed membership accepted ✅ *(note: this may be unintended business logic — a fixed membership with no duration has no practical meaning)* |
-| TC-04-11 | Medium | — | Include both `company` and `member` fields with `isPersonal=true` | `400 Bad Request` or `422 Unprocessable Entity` ⚠️ **BUG: returns `500` with `"Member with id X is an individual hence membership should not have its team property set."` — also leaks internal field name `team` instead of `company`** |
+| TC-04-02 | High | — | Include `"type": "fixed"` and a valid `endDate` after `startDate` | `201 Created`; `type=fixed`; `endDate` matches value sent ✅ |
+| TC-04-03 | High | — | Include `"type": "fixed"` without `endDate` | `400 Bad Request`; message: `"End date is required for fixed memberships"` ✅ |
+| TC-04-04 | Medium | — | Include `"intervalLength": "once"` | `201 Created`; `intervalLength=once` in response ✅ |
+| TC-04-05 | Medium | — | Include `"intervalLength": "hour"` | `201 Created`; `intervalLength=hour` in response ✅ |
+| TC-04-06 | Medium | — | Include `"intervalLength": "day"` | `201 Created`; `intervalLength=day` in response ✅ |
+| TC-04-07 | Medium | — | Include `"endDate"` set before `startDate` | `400 Bad Request` ⚠️ **BUG: returns `500` with `"Membership startDate should be before the endDate"`** |
+| TC-04-08 | Medium | — | Include `"properties": {"key1": "value1"}` | `201 Created`; `properties` in response equals `{"key1": "value1"}` ✅ |
+| TC-04-09 | Medium | — | Include `"type": "fixed"` with `endDate` equal to `startDate` | `201 Created`; zero-length fixed membership accepted ✅ *(note: this may be unintended business logic — a fixed membership with no duration has no practical meaning)* |
+| TC-04-10 | Medium | — | Include both `company` and `member` fields with `isPersonal=true` | `400 Bad Request` or `422 Unprocessable Entity` ⚠️ **BUG: returns `500` with `"Member with id X is an individual hence membership should not have its team property set."` — also leaks internal field name `team` instead of `company`** |
 
 ---
 
@@ -182,8 +181,8 @@
 | TC ID | Severity | Description |
 |---|---|---|
 | TC-01-06 | Critical | Wrong org returns `500` instead of `403`/`404` |
-| TC-04-08 | High | `endDate` before `startDate` returns `500` instead of `400`/`422` |
-| TC-04-11 | High | Both `company` and `member` with `isPersonal=true` returns `500` instead of `400`/`422`; error message also leaks internal field name `team` |
+| TC-04-07 | High | `endDate` before `startDate` returns `500` instead of `400`/`422` |
+| TC-04-10 | High | Both `company` and `member` with `isPersonal=true` returns `500` instead of `400`/`422`; error message also leaks internal field name `team` |
 | TC-05-01 | High | Empty `name` string returns `500` instead of `400` |
 | TC-05-04 | High | Non-ObjectId `location` string returns `500` BSON cast error instead of `400` |
 | TC-05-05 | High | Non-ObjectId `plan` string returns `500` instead of `400` |
