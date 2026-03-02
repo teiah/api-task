@@ -4,6 +4,7 @@
 
 **Endpoint:** `GET https://staging.officernd.com/api/v2/organizations/{orgSlug}/memberships/count`
 **Auth:** OAuth 2.0 Bearer token · **Required scope:** `flex.community.memberships.read`
+**Documentation:** https://developer.officernd.com/reference/membershipscontroller_count.md
 
 > All test cases assume a valid Bearer token with the `flex.community.memberships.read` scope unless the case explicitly tests authentication or authorization.
 

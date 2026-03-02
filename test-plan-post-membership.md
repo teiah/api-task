@@ -4,6 +4,7 @@
 
 **Endpoint:** `POST https://staging.officernd.com/api/v2/organizations/{orgSlug}/memberships`
 **Auth:** OAuth 2.0 Bearer token · **Required scope:** `flex.community.memberships.create`
+**Documentation:** https://developer.officernd.com/reference/membershipscontroller_additem.md
 
 > All test cases assume a valid Bearer token with the `flex.community.memberships.create` scope and `Content-Type: application/json` unless the case explicitly tests authentication or headers.
 

@@ -17,12 +17,12 @@ Every test plan document in this project must:
 
 | Endpoint | Method | Documentation |
 |---|---|---|
-| Get Memberships (list) | GET | https://developer.officernd.com/reference/membershipscontroller_getitems |
-| Add Membership | POST | https://developer.officernd.com/reference/membershipscontroller_additem |
-| Get Membership Count | GET | https://developer.officernd.com/reference/membershipscontroller_count |
-| Get Membership (single) | GET | https://developer.officernd.com/reference/membershipscontroller_getitem |
-| Update Membership | PUT | https://developer.officernd.com/reference/membershipscontroller_updateitem |
-| Delete Membership | DELETE | https://developer.officernd.com/reference/membershipscontroller_deleteitem |
+| Get Memberships (list) | GET | https://developer.officernd.com/reference/membershipscontroller_getitems.md |
+| Add Membership | POST | https://developer.officernd.com/reference/membershipscontroller_additem.md |
+| Get Membership Count | GET | https://developer.officernd.com/reference/membershipscontroller_count.md |
+| Get Membership (single) | GET | https://developer.officernd.com/reference/membershipscontroller_getitem.md |
+| Update Membership | PUT | https://developer.officernd.com/reference/membershipscontroller_updateitem.md |
+| Delete Membership | DELETE | https://developer.officernd.com/reference/membershipscontroller_deleteitem.md |
 
 **Base URL:** `https://app.officernd.com/api/v2/organizations/{orgSlug}/memberships`
 **Auth:** OAuth 2.0 Bearer token. Required scope varies per endpoint — check individual documentation pages.
