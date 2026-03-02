@@ -164,7 +164,6 @@
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-07-01 | High | — | Send two identical POST requests in quick succession | Two separate `201` responses each with a distinct `_id` — POST is **not idempotent** ✅ |
 | TC-07-02 | Medium | — | Send a very long string as `name` (e.g. 10 000 characters) | `201 Created` or `400 Bad Request` with a max-length error *(document observed behaviour)* |
 | TC-07-03 | Medium | — | Send `startDate` with a past date (e.g. `2018-01-01`) | `201 Created`; `calculatedStatus` reflects actual state based on dates ✅ *(endDate=2027 test confirmed past startDate is accepted)* |
 | TC-07-04 | Medium | — | Set `name` to a whitespace-only string (e.g. `"   "`) | `400 Bad Request` ⚠️ **BUG: returns `201 Created`; whitespace-only name `"   "` accepted and stored — the API validates that `name` is a non-empty string but does not trim or reject whitespace-only values** |
