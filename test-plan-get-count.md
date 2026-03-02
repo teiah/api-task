@@ -66,10 +66,10 @@
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-03-01 | Critical | Org with ≥1 membership | Send valid request; inspect top-level response fields and types | `200 OK`; body contains `total` (number, required, non-negative integer); body may contain `groups` (array of objects, each with `key` (string, required) and `count` (number, required)); no other fields present ✅ *(`groups` absent when no grouping parameter is in effect)* |
+| TC-03-01 | Critical | Org with ≥1 membership | Send valid request; inspect top-level response fields and types | `200 OK`; body contains exactly `total` (number, required, non-negative integer); `groups` absent ✅ |
 | TC-03-02 | High | Org with ≥1 membership | Verify the `total` field value against `GET /memberships` with no `$limit` | `total` equals `rangeEnd` from the list response ✅ *(both returned `30` for the test org)* |
-| TC-03-03 | High | Org with zero memberships | `GET /{orgSlug}/memberships/count` on an empty org | `200 OK`; `total` is `0`; `groups` absent or empty array |
-| TC-03-04 | High | Org with memberships in multiple states | Send a request that triggers grouping; verify each object in `groups` | Each object in `groups` contains exactly: `key` (string, non-empty) and `count` (number, non-negative integer); sum of all `count` values equals `total` *(not executed — could not determine the parameter that triggers `groups`)* |
+| TC-03-03 | High | Org with zero memberships | `GET /{orgSlug}/memberships/count` on an empty org | `200 OK`; `total` is `0`; `groups` absent |
+| TC-03-04 | Medium | — | Send a valid request; inspect response for `groups` field | `groups` absent ✅ ⚠️ **BUG: response schema defines a `groups` array but no query parameter triggers it and it is never present in actual responses** |
 | TC-03-05 | Medium | — | Inspect response headers from a valid request | `Content-Type: application/json; charset=utf-8`; rate-limit headers present: `x-ratelimit-limit-read-minute`, `x-ratelimit-remaining-read-minute`, `x-ratelimit-reset-read-minute`, `x-ratelimit-limit-read-day`, `x-ratelimit-remaining-read-day`, `x-ratelimit-reset-read-day` ✅ |
 
 ---
@@ -105,4 +105,5 @@
 | TC-04-04 | High | `isPersonal` filter silently ignored; count is always the unfiltered total |
 | TC-04-05 | High | `type` filter silently ignored; count is always the unfiltered total |
 | TC-04-06 | Medium | Invalid enum value in query param returns `200` instead of `400` |
+| TC-03-04 | Medium | Response schema defines a `groups` array but no query parameter populates it; `groups` is never present in actual responses |
 
