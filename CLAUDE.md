@@ -27,6 +27,7 @@ Every test plan document in this project must:
 **Base URL:** `https://app.officernd.com/api/v2/organizations/{orgSlug}/memberships`
 **Auth:** OAuth 2.0 Bearer token. Required scope varies per endpoint — check individual documentation pages.
 **`$limit` max:** 50
+**Querying data (paging & filtering):** https://developer.officernd.com/docs/building-queries.md
 
 ---
 
