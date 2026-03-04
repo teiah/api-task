@@ -69,7 +69,7 @@
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
 | TC-03-01 | Critical | A non-invoiced membership | Send a valid DELETE; apply MembershipResultDto verification to the `200` response — see [GET single test plan TC-03-01b – TC-03-10](test-plan-get-membership.md#tc-03--response-structure---verify-membershipresultdto) | Response is the membership as it existed just before deletion and passes all field-presence, type, timestamp-format, enum, and conditional-field checks ✅. Note: `properties` is always present in the DELETE response even when empty (`{}`) — this differs from the TC-03-06 behaviour in GET single and is documented in TC-03-03 and TC-03-04 below |
-| TC-03-02 | High | A non-invoiced membership | After receiving the `200` response, immediately `GET` the same `membershipId` | `404 Not Found`; the membership no longer exists *(implied by idempotency test TC-05-01 — second DELETE returns 404)* |
+| TC-03-02 | High | A non-invoiced membership | After receiving the `200` response, immediately `GET` the same `membershipId` | `404 Not Found`; the membership no longer exists *(confirmed by TC-05-01 — second DELETE on the same ID returns `404`)* |
 | TC-03-03 | Medium | A non-invoiced membership with `properties: {}` | Send a valid DELETE; inspect `properties` field in response | `properties` is present as `{}` even when empty ✅ *(note: this is inconsistent with GET single, which omits `properties` when empty — see TC-03-04)* |
 | TC-03-04 | Medium | — | Compare `properties` field behaviour between DELETE response and GET single response for the same membership | DELETE response always includes `properties` (even `{}`); GET single omits `properties` when empty ⚠️ **BUG: inconsistent `properties` field presence between endpoints** |
 | TC-03-05 | Medium | — | Inspect response headers from a valid request | `Content-Type: application/json; charset=utf-8` ✅ |
@@ -89,7 +89,7 @@
 
 | ID | Priority | Prerequisites | Steps | Expected Result |
 |---|---|---|---|---|
-| TC-05-01 | High | A non-invoiced membership | Send `DELETE .../memberships/{id}` twice using the same `membershipId` | First request: `200 OK`; second request: `404 Not Found` — DELETE is **not idempotent** ✅ |
+| TC-05-01 | High | A non-invoiced membership | Send `DELETE .../memberships/{id}` twice using the same `membershipId` | First request: `200 OK`; second request: `404 Not Found` — server state is identical after both calls (resource absent); `404` on the second call is correct ✅ |
 
 ---
 
