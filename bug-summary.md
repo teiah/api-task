@@ -56,5 +56,4 @@ Multiple endpoints return `500 Internal Server Error` for predictable business r
 | GET count | All query parameters (including field filters) silently ignored — count always returns unfiltered total |
 | GET count | `POST` on `/count` path returns `404` instead of `405` |
 | GET single | `properties` absent from response when empty `{}`; always present as `{}` in GET list |
-| PUT | Only `startDate`, `endDate`, and `price` accepted — all other fields including `name`, `type`, `plan`, `location`, `company`, `isPersonal`, `intervalLength`, and `properties` return `400 "property X should not exist"` |
 | DELETE | Response includes `properties: {}` even when empty; GET single omits it — inconsistency |
